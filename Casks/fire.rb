@@ -4,7 +4,7 @@ cask "fire" do
 
   url "https://github.com/jerryuhoo/Fire/releases/download/v#{version}/Fire-#{version}-macOS.zip"
   name "Fire"
-  desc "Multi-band distortion plugin"
+  desc "Multi-band distortion plugin by Jerry Uhoo"
   homepage "https://jerryuhoo.github.io/Fire/"
 
   artifact "AU/Fire.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Fire.component"
