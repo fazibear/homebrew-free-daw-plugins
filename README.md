@@ -1,0 +1,3 @@
+# Free DAW Plugins Homebrew Casks
+
+The daily `Discover free audio plugins` workflow searches GitHub and the wider web for macOS `.pkg` and `.dmg` releases, creates candidate casks, and opens a pull request for review. It uses public DuckDuckGo HTML search, so no search API key is required. GitHub discovery uses the automatic `GITHUB_TOKEN`. If the repository setting “Allow GitHub Actions to create and approve pull requests” is disabled, add a `CASK_BOT_TOKEN` repository secret containing a fine-grained token with Contents and Pull requests write access. Discovered PRs are validated with Ruby syntax checks and `brew audit`; passing PRs are automatically squash-merged by the merge workflow. Review the automation carefully before enabling it for a production tap.
