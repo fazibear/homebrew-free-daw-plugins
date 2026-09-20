@@ -1,0 +1,30 @@
+name: Validate discovered cask
+
+on:
+  pull_request:
+    paths:
+      - "Casks/*.rb"
+      - ".github/workflows/validate-cask-pr.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: ${{ startsWith(github.event.pull_request.head.ref, 'automation/discovered-') && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Validate Ruby syntax
+        run: |
+          set -euo pipefail
+          files="$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" -- 'Casks/*.rb')"
+          test -n "$files"
+          for file in $files; do ruby -c "$file"; done
+      - name: Audit changed casks
+        run: |
+          set -euo pipefail
+          files="$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" -- 'Casks/*.rb')"
+          brew audit --cask --online $files
