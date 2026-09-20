@@ -1,0 +1,64 @@
+name: Validate discovered cask
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Discovery pull request number"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    env:
+      GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+          INPUT_PR: ${{ inputs.pr_number || github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          metadata="$(gh pr view "$INPUT_PR" --repo "$REPOSITORY" --json headRefName,headRepository,labels)"
+          head_ref="$(jq -r '.headRefName' <<< "$metadata")"
+          head_repo="$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")"
+          has_automation_label="$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")"
+          [[ "$head_ref" == automation/discovered-* ]]
+          [[ "$head_repo" == "$REPOSITORY" ]]
+          [[ "$has_automation_label" == true ]]
+          gh pr checkout "$INPUT_PR" --repo "$REPOSITORY"
+          echo "number=$INPUT_PR" >> "$GITHUB_OUTPUT"
+      - name: Validate Ruby syntax
+        run: |
+          set -euo pipefail
+          base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
+          head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
+          files="$(git diff --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
+          test -n "$files"
+          for file in $files; do ruby -c "$file"; done
+      - name: Validate cask declarations
+        run: |
+          set -euo pipefail
+          base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
+          head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
+          files="$(git diff --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
+          for file in $files; do
+            grep -Eq '^cask "[a-z0-9][a-z0-9-]*" do$' "$file"
+            grep -Eq '^  url "https?://' "$file"
+            grep -Eq '^  sha256 ("[0-9a-f]{64}"|:no_check)$' "$file"
+            grep -Eq '^  depends_on :macos$' "$file"
+          done
+      - name: Merge validated pull request
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: gh pr merge "${{ steps.pr.outputs.number }}" --repo "$REPOSITORY" --squash --admin --delete-branch
