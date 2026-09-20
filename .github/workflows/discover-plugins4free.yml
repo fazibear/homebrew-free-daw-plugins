@@ -1,0 +1,44 @@
+name: Discover free audio plugins on Plugins4Free
+
+on:
+  schedule:
+    - cron: "47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  discover:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Parse Plugins4Free instruments directory and create casks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/plugins4free_plugins.py | python3 .github/scripts/create_casks.py
+      - name: Open one pull request per cask
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          base_branch="${GITHUB_REF_NAME}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          files="$(git ls-files --others --exclude-standard 'Casks/*.rb')"
+          test -n "$files"
+          branch="automation/discovered-plugins4free"
+          git checkout -B "$branch" "origin/${base_branch}"
+          git add $files
+          git commit -m "Add Plugins4Free casks"
+          git push --force-with-lease origin "$branch"
+          body="Automated Plugins4Free discovery candidates.\n\n"
+          for file in $files; do
+            body+="- $(basename "$file" .rb)\n"
+          done
+          body+=$'\nPlease review licensing, checksum, installer behavior, and Homebrew policy.'
+          gh pr create --base "$base_branch" --head "$branch" --title "Add Plugins4Free casks" --body "$body" --label automation
