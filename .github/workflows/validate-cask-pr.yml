@@ -1,0 +1,38 @@
+name: Validate discovered cask
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "Casks/*.rb"
+      - ".github/workflows/validate-cask-pr.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: ${{ startsWith(github.event.pull_request.head.ref, 'automation/discovered-') && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Validate Ruby syntax
+        run: |
+          set -euo pipefail
+          files="$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" -- 'Casks/*.rb')"
+          test -n "$files"
+          for file in $files; do ruby -c "$file"; done
+      - name: Validate cask declarations
+        run: |
+          set -euo pipefail
+          files="$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" -- 'Casks/*.rb')"
+          for file in $files; do
+            grep -Eq '^cask "[a-z0-9][a-z0-9-]*" do$' "$file"
+            grep -Eq '^  url "https?://' "$file"
+            grep -Eq '^  sha256 ("[0-9a-f]{64}"|:no_check)$' "$file"
+            grep -Eq '^  depends_on :macos$' "$file"
+          done
