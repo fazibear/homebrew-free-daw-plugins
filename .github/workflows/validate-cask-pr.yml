@@ -1,0 +1,70 @@
+name: Validate discovered cask
+run-name: Validate ${{ github.event.pull_request.title }}
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    env:
+      GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check out pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          INPUT_PR="${{ github.event.pull_request.number }}"
+          metadata="$(gh pr view "$INPUT_PR" --repo "$REPOSITORY" --json headRefName,headRepository,labels)"
+          head_ref="$(jq -r '.headRefName' <<< "$metadata")"
+          head_repo="$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")"
+          has_automation_label="$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")"
+          [[ "$head_ref" == automation/discovered-* ]]
+          [[ "$head_repo" == "$REPOSITORY" ]]
+          [[ "$has_automation_label" == true ]]
+          gh pr checkout "$INPUT_PR" --repo "$REPOSITORY"
+          echo "number=$INPUT_PR" >> "$GITHUB_OUTPUT"
+      - name: Validate Ruby syntax
+        run: |
+          set -euo pipefail
+          base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
+          head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
+          files="$(git diff --diff-filter=AM --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
+          test -n "$files"
+          for file in $files; do test -f "$file"; ruby -c "$file"; done
+      - name: Validate cask declarations
+        run: |
+          set -euo pipefail
+          base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
+          head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
+          files="$(git diff --diff-filter=AM --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
+          for file in $files; do
+            grep -Eq '^cask "[a-z0-9][a-z0-9-]*" do$' "$file"
+            grep -Eq '^  url "https?://' "$file"
+            grep -Eq '^  sha256 ("[0-9a-f]{64}"|:no_check)$' "$file"
+            grep -Eq '^  depends_on :macos$' "$file"
+          done
+      - name: Install changed casks
+        run: |
+          set -euo pipefail
+          base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
+          head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
+          files="$(git diff --diff-filter=AM --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
+          brew tap "$GITHUB_REPOSITORY" "$GITHUB_WORKSPACE"
+          for file in $files; do
+            token="$(sed -n 's/^cask "\([a-z0-9-]*\)" do$/\1/p' "$file")"
+            echo "Installing $token from $file"
+            brew install --cask "$GITHUB_REPOSITORY/$token"
+            brew uninstall --cask --force "$GITHUB_REPOSITORY/$token" || true
+          done
