@@ -1,0 +1,52 @@
+name: Merge validated discovered casks
+run-name: Merge ${{ github.event.workflow_run.display_title }}
+
+on:
+  workflow_run:
+    workflows: ["Validate discovered cask"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Merge validated bot PR
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+          READ_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          BOT_LOGIN: ${{ secrets.CASK_BOT_LOGIN }}
+        run: |
+          set -euo pipefail
+          test -n "$PR_NUMBER"
+          test -n "$BOT_LOGIN"
+          metadata="$(GH_TOKEN="$READ_TOKEN" gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json author,headRefName,headRepository,labels,state,autoMergeRequest)"
+          [[ "$(jq -r '.state' <<< "$metadata")" != MERGED ]]
+          if [[ "$(jq -r '.autoMergeRequest // empty' <<< "$metadata")" != "" ]]; then
+            echo "Auto-merge is already enabled for PR #$PR_NUMBER"
+            exit 0
+          fi
+          [[ "$(jq -r '.author.login' <<< "$metadata")" == "$BOT_LOGIN" ]]
+          [[ "$(jq -r '.headRefName' <<< "$metadata")" == automation/discovered-* ]]
+          [[ "$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")" == "$REPOSITORY" ]]
+          [[ "$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")" == true ]]
+          if ! merge_output="$(gh pr merge "$PR_NUMBER" --repo "$REPOSITORY" --squash --auto 2>&1)"; then
+            if grep -qi "pull request is in clean status" <<< "$merge_output"; then
+              echo "PR is already clean; merging it directly"
+              gh pr merge "$PR_NUMBER" --repo "$REPOSITORY" --squash
+            else
+              printf '%s\n' "$merge_output" >&2
+              exit 1
+            fi
+          else
+            printf '%s\n' "$merge_output"
+          fi
