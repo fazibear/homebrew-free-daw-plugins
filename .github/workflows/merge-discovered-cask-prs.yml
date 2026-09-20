@@ -1,0 +1,35 @@
+name: Merge validated discovered casks
+
+on:
+  workflow_run:
+    workflows: ["Validate discovered cask"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-latest
+    steps:
+      - name: Merge validated discovery PR
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          prs="$(gh api \
+            --paginate \
+            -H 'Accept: application/vnd.github+json' \
+            "/repos/${REPOSITORY}/actions/runs/${RUN_ID}/pull_requests" \
+            --jq '.[] | select(.head.ref | startswith("automation/discovered-")) | .number')"
+          for pr in $prs; do
+            gh pr merge "$pr" \
+              --repo "$REPOSITORY" \
+              --squash \
+              --admin \
+              --delete-branch
+          done

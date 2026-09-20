@@ -1,0 +1,54 @@
+name: Validate discovered cask
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Discovery pull request number"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    env:
+      GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+          INPUT_PR: ${{ inputs.pr_number || github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh pr checkout "$INPUT_PR" --repo "$REPOSITORY"
+          echo "number=$INPUT_PR" >> "$GITHUB_OUTPUT"
+      - name: Validate Ruby syntax
+        run: |
+          set -euo pipefail
+          base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
+          head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
+          files="$(git diff --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
+          test -n "$files"
+          for file in $files; do ruby -c "$file"; done
+      - name: Validate cask declarations
+        run: |
+          set -euo pipefail
+          base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
+          head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
+          files="$(git diff --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
+          for file in $files; do
+            grep -Eq '^cask "[a-z0-9][a-z0-9-]*" do$' "$file"
+            grep -Eq '^  url "https?://' "$file"
+            grep -Eq '^  sha256 ("[0-9a-f]{64}"|:no_check)$' "$file"
+            grep -Eq '^  depends_on :macos$' "$file"
+          done
