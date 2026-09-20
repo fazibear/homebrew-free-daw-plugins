@@ -1,0 +1,63 @@
+name: Discover free audio plugins on Plugins4Free
+
+on:
+  schedule:
+    - cron: "47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  discover:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Parse Plugins4Free instruments directory and create casks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/plugins4free_plugins.py | python3 .github/scripts/create_casks.py
+      - name: Open one pull request per cask
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          base_branch="${GITHUB_REF_NAME}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          files="$(git ls-files --others --exclude-standard 'Casks/*.rb')"
+          test -n "$files"
+          groups_dir="$(mktemp -d)"
+          for file in $files; do
+            homepage="$(sed -n 's/^  homepage "\(.*\)"$/\1/p' "$file")"
+            key="$(printf '%s' "$homepage" | sed 's#/$##; s#.*plugin/##; s#[^A-Za-z0-9._-]#-#g')"
+            test -n "$key"
+            printf '%s\n' "$file" >> "$groups_dir/$key"
+          done
+          for group in "$groups_dir"/*; do
+            key="$(basename "$group")"
+            branch="automation/discovered-plugins4free-${key}"
+            if gh pr view "$branch" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "Skipping $key: an open Plugins4Free discovery PR already exists"
+              continue
+            fi
+            git checkout -B "$branch" "origin/${base_branch}"
+            group_files="$(tr '\n' ' ' < "$group")"
+            git add $group_files
+            first_file="$(printf '%s\n' $group_files | head -n 1)"
+            plugin_name="$(sed -n 's/^  name "\(.*\)"$/\1/p' "$first_file")"
+            plugin_desc="$(sed -n 's/^  desc "\(.*\)"$/\1/p' "$first_file")"
+            test -n "$plugin_name"
+            git commit -m "Add ${plugin_name} casks"
+            git push --force-with-lease origin "$branch"
+            body="Automated Plugins4Free discovery candidates for ${plugin_name}.\n\nDescription: ${plugin_desc}\n\nCasks:\n"
+            for file in $group_files; do
+              body+="- $(basename "$file" .rb)\n"
+            done
+            body+=$'\nPlease review licensing, checksum, installer behavior, and Homebrew policy.'
+            gh pr create --base "$base_branch" --head "$branch" --title "Add ${plugin_name} casks" --body "$body" --label automation
+          done
