@@ -1,0 +1,30 @@
+name: Discover free audio plugins
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find release installers and create casks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/discover_casks.py
+      - name: Open pull request when casks were found
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Discover new free audio plugin casks"
+          branch: automation/discovered-casks
+          delete-branch: true
+          title: "Discover new free audio plugin casks"
+          body: "Automated candidate casks from public GitHub releases. Please review licensing, assets, install paths, and Homebrew policy before merging."
+          labels: automation
