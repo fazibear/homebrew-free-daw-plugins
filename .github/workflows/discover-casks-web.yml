@@ -1,0 +1,46 @@
+name: Discover free audio plugins on DuckDuckGo
+
+on:
+  schedule:
+    - cron: "47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  discover:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Search DuckDuckGo and create casks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/discover_casks.py --source web
+      - name: Open one pull request per cask
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          base_branch="${GITHUB_REF_NAME}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git ls-files --others --exclude-standard 'Casks/*.rb' | while IFS= read -r file; do
+            test -n "$file"
+            slug="$(basename "$file" .rb)"
+            branch="automation/discovered-web-${slug}"
+            git checkout -B "$branch" "origin/${base_branch}"
+            git add "$file"
+            git commit -m "Add ${slug} cask"
+            git push --force-with-lease origin "$branch"
+            pr_url="$(gh pr create \
+              --base "$base_branch" \
+              --head "$branch" \
+              --title "Add ${slug} cask" \
+              --body "Automated DuckDuckGo discovery candidate. Please review licensing, download URL, checksum, installer behavior, and Homebrew policy." \
+              --label automation)"
+          done
