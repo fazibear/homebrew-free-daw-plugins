@@ -1,0 +1,31 @@
+name: Merge validated discovered casks
+
+on:
+  workflow_run:
+    workflows: ["Validate discovered cask"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-latest
+    steps:
+      - name: Merge validated bot PR
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          prs="$(gh api --paginate "/repos/${REPOSITORY}/actions/runs/${RUN_ID}/pull_requests" \
+            --jq '.[] | select(.head.ref | startswith("automation/discovered-")) | .number')"
+          for pr in $prs; do
+            metadata="$(gh pr view "$pr" --repo "$REPOSITORY" --json headRefName,headRepository,labels)"
+            [[ "$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")" == "$REPOSITORY" ]]
+            [[ "$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")" == true ]]
+            gh pr merge "$pr" --repo "$REPOSITORY" --squash --admin --delete-branch
+          done
