@@ -1,0 +1,10 @@
+cask "drum-pro-vst" do
+  version "latest"
+  sha256 :no_check
+  url "https://alt1.plugins4free.com/get_plug/DrumPro_MacVST.zip"
+  name "Drum Pro"
+  desc "Drum Pro is a drum kit rompler including some sampled vintage units."
+  homepage "https://plugins4free.com/plugin/2225"
+  depends_on :macos
+  artifact "Drum Pro Mac VST/DRUM PRO.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+end
