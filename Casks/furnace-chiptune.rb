@@ -8,6 +8,6 @@ cask "furnace-chiptune" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "FurnacePlugin.component", "{{user}}/Library/Audio/Plug-Ins/Components/FurnacePlugin.component"
+    copy "FurnacePlugin.component", "{{user}}/Library/Audio/Plug-Ins/Components/FurnacePlugin.component", recursive: true
   end
 end
