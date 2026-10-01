@@ -6,5 +6,8 @@ cask "awesome-piano-au" do
   desc "Awesome Piano is a sample based dissonant piano ."
   homepage "https://plugins4free.com/plugin/2927"
   depends_on :macos
-  artifact "Awesome Piano (Mac AU)/Awesome Piano.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Awesome Piano (Mac AU)/Awesome Piano.component", "{{user}}/Library/Audio/Plug-Ins/Components/Awesome Piano.component"
+  end
 end
