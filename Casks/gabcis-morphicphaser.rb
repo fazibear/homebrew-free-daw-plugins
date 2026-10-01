@@ -6,8 +6,5 @@ cask "gabcis-morphicphaser" do
   desc "Free audio plugin"
   homepage "https://github.com/rcptr2/gabcis-morphicphaser"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "MorphicPhaser.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/MorphicPhaser.vst3", recursive: true
-  end
+  artifact "MorphicPhaser.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/MorphicPhaser.vst3"
 end
