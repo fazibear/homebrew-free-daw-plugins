@@ -9,7 +9,5 @@ cask "k1v-au" do
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
     move "NilsK1v.component", "{{user}}/Library/Audio/Plug-Ins/Components/NilsK1v.component"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/__MACOSX/NilsK1v.component/Contents"
-    copy "__MACOSX/NilsK1v.component/Contents/._Pkginfo", "{{user}}/Library/Audio/Plug-Ins/Components/__MACOSX/NilsK1v.component/Contents/._Pkginfo"
   end
 end
