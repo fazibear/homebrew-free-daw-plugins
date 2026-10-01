@@ -6,5 +6,9 @@ cask "symptohm-pe-au" do
   desc "Symptohm Performer Edition is an easy to use preset synth , built from the Symptohm:Melohman synth engine."
   homepage "https://plugins4free.com/plugin/1506"
   depends_on :macos
-  dmg "SymptohmPE-131-macosx64-au-free.dmg"
+  container type: :dmg
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "SymptohmPE AU Installer.app/Contents/Resources/classic/!MACOS@-32765@acmp!/SymptohmPE_AUMachO.component", "{{user}}/Library/Audio/Plug-Ins/Components/SymptohmPE_AUMachO.component"
+  end
 end
