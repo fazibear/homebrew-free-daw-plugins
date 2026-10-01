@@ -117,7 +117,7 @@ jobs:
               return 1
             }
 
-            printf '\n--- Regenerating PR #%s (%d/%d) ---\n' "$pr_number" "$position" "$total"
+            printf '\n\n--- Regenerating PR #%s (%d/%d) ---\n\n' "$pr_number" "$position" "$total"
             echo "  Rebasing onto $base_ref..."
             run_step "Checking out PR branch" gh pr checkout "$pr_number" --repo "$REPOSITORY" || return 1
             run_step "Fetching base branch $base_ref" git fetch origin "$base_ref" || return 1
