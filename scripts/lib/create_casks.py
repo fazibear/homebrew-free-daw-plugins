@@ -172,8 +172,9 @@ def render(candidate):
             return None, None
         if isinstance(archive, tuple):
             bundle, _, _, _ = archive
-            bundles = [bundle]
-            apps = []
+            bundles = [] if bundle.lower().endswith((".app", ".pkg")) else [bundle]
+            apps = [bundle] if bundle.lower().endswith(".app") else []
+            packages = [bundle] if bundle.lower().endswith(".pkg") else []
         else:
             bundles = archive.get("bundles", [])
             apps = archive.get("apps", [])
@@ -190,26 +191,18 @@ def render(candidate):
                 extension = candidate.get("format", "VST3")
                 suffix = {"AU": ".component", "VST": ".vst", "AAX": ".aaxplugin"}.get(extension, f".{extension.lower()}")
                 bundles = [f"{filename}{suffix}"]
-            aax_bundles = [item for item in bundles if item.lower().endswith(".aaxplugin")]
-            bundles = [item for item in bundles if not item.lower().endswith(".aaxplugin")]
-            install = "  postflight_steps do\n"
+            artifacts = []
             for plugin_bundle in bundles:
                 plugin_extension = Path(plugin_bundle).suffix.lower()
                 extension = PLUGIN_DIRS.get(plugin_extension, candidate.get("format", "VST3"))
-                plugin_dir = f"Library/Audio/Plug-Ins/{extension}"
-                bundle_target = f"{plugin_dir}/{Path(plugin_bundle).name}"
-                install += f'    mkdir_p "{{{{user}}}}/{plugin_dir}"\n'
-                install += f'    copy "{plugin_bundle}", "{{{{user}}}}/{bundle_target}", recursive: true\n'
+                if plugin_extension == ".aaxplugin":
+                    target = f"/Library/Application Support/Avid/Audio/Plug-Ins/{Path(plugin_bundle).name}"
+                else:
+                    target = f"#{{Dir.home}}/Library/Audio/Plug-Ins/{extension}/{Path(plugin_bundle).name}"
+                artifacts.append(f'  artifact "{plugin_bundle}", target: "{target}"')
             for app_bundle in apps:
-                app_target = f"Applications/{Path(app_bundle).name}"
-                install += f'    mkdir_p "{{{{user}}}}/Applications"\n'
-                install += f'    copy "{app_bundle}", "{{{{user}}}}/{app_target}", recursive: true\n'
-            install += "  end"
-            if not bundles and not apps:
-                install = ""
-            for aax_bundle in aax_bundles:
-                target = f"/Library/Application Support/Avid/Audio/Plug-Ins/{Path(aax_bundle).name}"
-                install += f'\n  artifact "{aax_bundle}", target: "{target}"'
+                artifacts.append(f'  app "{app_bundle}", target: "#{{Dir.home}}/Applications/{Path(app_bundle).name}"')
+            install = "\n".join(artifacts)
     container = "  container type: :dmg\n" if filename.lower().endswith(".dmg") else ""
     return name, f'''cask "{name}" do
   version "{candidate.get("version", "latest")}"
