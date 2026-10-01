@@ -81,7 +81,7 @@ jobs:
             local pr_number="$1"
             local position="$2"
             local total="$3"
-            local metadata head_ref base_ref head_repo author has_label original_head
+            local metadata head_ref base_ref head_repo author has_label regenerated_changes=false
             local files=()
 
             failure_reason=""
@@ -120,7 +120,6 @@ jobs:
             printf '\n--- Regenerating PR #%s (%d/%d) ---\n' "$pr_number" "$position" "$total"
             echo "  Rebasing onto $base_ref..."
             run_step "Checking out PR branch" gh pr checkout "$pr_number" --repo "$REPOSITORY" || return 1
-            original_head="$(git rev-parse HEAD)" || return 1
             run_step "Fetching base branch $base_ref" git fetch origin "$base_ref" || return 1
             if ! run_step "Rebasing onto $base_ref" git rebase "origin/$base_ref"; then
               git rebase --abort || true
@@ -144,16 +143,17 @@ jobs:
             )
 
             if ! git diff --quiet -- Casks; then
+              regenerated_changes=true
               git add -- Casks
               run_step "Committing regenerated casks" git commit -m "Regenerate discovery casks" || return 1
             fi
 
-            if [[ "$(git rev-parse HEAD)" != "$original_head" ]]; then
+            if [[ "$regenerated_changes" == true ]]; then
               echo "  Pushing regenerated casks..."
               run_step "Pushing regenerated casks" git push --force-with-lease origin "HEAD:$head_ref" || return 1
               echo "  Done."
             else
-              echo "  Already up to date."
+              echo "  No generated cask changes; skipping commit and push."
             fi
           }
 
