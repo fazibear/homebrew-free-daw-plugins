@@ -4,10 +4,10 @@ import re
 import sys
 from pathlib import Path
 
-from cask_utils import github_repository, preserve_cask_token, stanza
-from create_casks import archive_members, render
-from github_plugins import candidate_from_repository
-from plugins4free_plugins import candidates_from_plugin_page
+from .cask_utils import github_repository, preserve_cask_token, stanza
+from .create_casks import archive_members, render
+from .github import candidate_from_repository
+from .plugins4free import candidates_from_plugin_page
 
 
 def candidate_for(path):

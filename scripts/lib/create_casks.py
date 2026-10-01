@@ -10,9 +10,9 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from cask_utils import http_request
+from .cask_utils import http_request
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 CASKS = ROOT / "Casks"
 METADATA_DIRECTORIES = {"__MACOSX", ".fseventsd", ".Spotlight-V100", ".Trashes", ".TemporaryItems"}
 METADATA_FILES = {".DS_Store", ".VolumeIcon.icns"}
@@ -223,9 +223,12 @@ end
 '''
 
 def main():
+    create_casks(json.load(sys.stdin))
+
+def create_casks(candidates):
     known = existing()
     created = []
-    for candidate in json.load(sys.stdin):
+    for candidate in candidates:
         if "filename" not in candidate:
             continue
         name, content = render(candidate)

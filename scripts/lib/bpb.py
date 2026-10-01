@@ -11,12 +11,18 @@ import re
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
 
+from .cask_utils import stanza
+from .create_casks import clean_name, slug
+from .plugin_downloads import find_downloads
+
 HOME = "https://bedroomproducersblog.com/"
 THREAD_SLUG = re.compile(r"^df[a-z]{3}\d{2}$", re.I)
+CASKS = Path(__file__).resolve().parents[2] / "Casks"
 
 
 def fetch(url):
@@ -101,26 +107,23 @@ def wordpress_json(url):
 
 
 def monthly_thread_from_api():
-    for page in range(1, 6):
-        query = urllib.parse.urlencode({
-            "per_page": 100,
-            "page": page,
-            "orderby": "date",
-            "order": "desc",
-            "_fields": "link,title,date,slug",
-        })
-        posts = wordpress_json(f"{HOME}wp-json/wp/v2/posts?{query}")
-        if not isinstance(posts, list):
-            raise RuntimeError("BPB posts API returned an unexpected response")
-        for post in posts:
-            title = post.get("title", {}).get("rendered", "")
-            for _ in range(2):
-                title = html.unescape(title)
-            title = re.sub(r"<[^>]+>", " ", title).lower()
-            if all(word in title for word in ("deals", "freebies", "thread")):
-                return post.get("link")
-        if len(posts) < 100:
-            break
+    query = urllib.parse.urlencode({
+        "search": "Deals Freebies Thread",
+        "per_page": 20,
+        "orderby": "date",
+        "order": "desc",
+        "_fields": "link,title,date,slug",
+    })
+    posts = wordpress_json(f"{HOME}wp-json/wp/v2/posts?{query}")
+    if not isinstance(posts, list):
+        raise RuntimeError("BPB posts API returned an unexpected response")
+    for post in posts:
+        title = post.get("title", {}).get("rendered", "")
+        for _ in range(2):
+            title = html.unescape(title)
+        title = re.sub(r"<[^>]+>", " ", title).lower()
+        if all(word in title for word in ("deals", "freebies", "thread")):
+            return post.get("link")
     return None
 
 
@@ -143,7 +146,7 @@ def approved_comments(thread_url):
     comments = []
     page = 1
     while True:
-        query = urllib.parse.urlencode({"post": post, "per_page": 100, "page": page, "status": "approve"})
+        query = urllib.parse.urlencode({"post": post, "per_page": 50, "page": page, "status": "approve"})
         items = wordpress_json(f"{HOME}wp-json/wp/v2/comments?{query}")
         if not isinstance(items, list):
             raise RuntimeError("BPB comments API returned an unexpected response")
@@ -180,16 +183,115 @@ def candidates_from_comments(thread_url, comments):
     return results
 
 
-def main():
+def normalized_url(value):
+    parsed = urllib.parse.urlparse(value or "")
+    host = (parsed.hostname or "").lower().removeprefix("www.")
+    return host, parsed.path.rstrip("/").lower()
+
+
+def existing_casks():
+    tokens = set()
+    homepages = set()
+    for path in CASKS.glob("*.rb"):
+        tokens.add(path.stem)
+        homepage = stanza(path.read_text(), "homepage")
+        if homepage:
+            homepages.add(normalized_url(homepage))
+    return tokens, homepages
+
+
+def plugin_format(download):
+    text = f"{download.get('link_text', '')} {download.get('filename', '')}"
+    if re.search(r"\bVST3\b", text, re.I):
+        return "VST3"
+    if re.search(r"\bVST\b", text, re.I):
+        return "VST"
+    if re.search(r"\bAU\b|Audio\s*Unit|\.component\b", text, re.I):
+        return "AU"
+    if re.search(r"\bCLAP\b", text, re.I):
+        return "CLAP"
+    if re.search(r"\bLV2\b", text, re.I):
+        return "LV2"
+    if re.search(r"\bAAX\b", text, re.I):
+        return "AAX"
+    return None
+
+
+def product_name(download, page):
+    name = re.sub(r"\s+", " ", download.get("product_name", "")).strip()
+    if re.match(r"^v?\d+(?:\.\d+)+\b", name, re.I) or re.search(r"choose a tag to compare", name, re.I):
+        parsed = urllib.parse.urlparse(page)
+        if parsed.hostname and parsed.hostname.lower() == "github.com":
+            parts = [part for part in parsed.path.split("/") if part]
+            if len(parts) >= 2:
+                return parts[1]
+    name = re.sub(r"\s+[–—-]\s+v?\d+(?:\.\d+)+(?:.*)$", "", name, flags=re.I)
+    name = re.sub(r"\s+\[\d{1,2}-[A-Za-z]{3}-\d{4}\]$", "", name)
+    return name.strip()
+
+
+def cask_candidates(links):
+    existing_tokens, existing_homepages = existing_casks()
+    results = []
+    seen_tokens = set()
+    skipped_existing = set()
+    for link in links:
+        page = link["url"]
+        try:
+            downloads = find_downloads(page)
+        except Exception as error:
+            print(f"BPB: skipping {page}: {error}", file=sys.stderr)
+            continue
+        for download in downloads:
+            name = product_name(download, page)
+            if not name:
+                print(f"BPB: skipping {page}: product page has no title", file=sys.stderr)
+                continue
+            format_name = plugin_format(download)
+            token = slug(clean_name(name))
+            if format_name:
+                token = f"{token}-{format_name.lower()}"
+            if token in existing_tokens or normalized_url(page) in existing_homepages:
+                skipped_existing.add(page)
+                continue
+            if token in seen_tokens:
+                continue
+            candidate = {
+                "name": name,
+                "description": link.get("comment") or name,
+                "homepage": page,
+                "version": "latest",
+                "url": download["url"],
+                "filename": download["filename"],
+                "source": "bpb-freebies",
+            }
+            if format_name:
+                candidate["format"] = format_name
+            results.append(candidate)
+            seen_tokens.add(token)
+    print(
+        f"BPB: skipped {len(skipped_existing)} existing plugin(s); "
+        f"verified {len(results)} new macOS installer candidate(s)",
+        file=sys.stderr,
+    )
+    return results
+
+
+def discover():
     try:
         thread = current_thread()
         comments = approved_comments(thread)
-        candidates = candidates_from_comments(thread, comments)
+        links = candidates_from_comments(thread, comments)
+        candidates = cask_candidates(links)
     except Exception as error:
         print(f"BPB: {error}", file=sys.stderr)
         raise SystemExit(1)
-    print(f"BPB: checked {len(comments)} approved comment(s); found {len(candidates)} unique external link(s) in {thread}", file=sys.stderr)
-    print(json.dumps(candidates, ensure_ascii=False))
+    print(f"BPB: checked {len(comments)} approved comment(s) in {thread}", file=sys.stderr)
+    return candidates
+
+
+def main():
+    print(json.dumps(discover(), ensure_ascii=False))
 
 
 if __name__ == "__main__":
