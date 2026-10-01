@@ -6,5 +6,8 @@ cask "sonatina-trumpet-au" do
   desc "Sonatina Trumpet is a sampled trumpet ."
   homepage "https://plugins4free.com/plugin/2305"
   depends_on :macos
-  artifact "Sonatina Trumpet.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Sonatina Trumpet.component", "{{user}}/Library/Audio/Plug-Ins/Components/Sonatina Trumpet.component"
+  end
 end
