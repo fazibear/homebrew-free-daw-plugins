@@ -6,5 +6,6 @@ cask "nwbass-vst" do
   desc "NWBass is a free classic mono bassline synth ."
   homepage "https://plugins4free.com/plugin/1073"
   depends_on :macos
-  dmg "WWAYM_NWBass_V1_1.dmg"
+  container type: :dmg
+  pkg "WWAYM_NWBass_V1_1.pkg"
 end
