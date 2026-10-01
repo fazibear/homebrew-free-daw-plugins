@@ -1,7 +1,7 @@
 cask "collab3-au" do
   version "latest"
   sha256 :no_check
-  url "https://alt1.plugins4free.com/get_plug/CollaB3-Installer.pkg"
+  url "https://plugins4free.com/get_plug/CollaB3-Installer.pkg"
   name "CollaB3"
   desc "CollaB3 is a Hammond B3 vintage tonewheel organ emulation."
   homepage "https://plugins4free.com/plugin/3117"
