@@ -6,5 +6,8 @@ cask "tal-u-no-62-vst" do
   desc "The U-NO-62 vst plugin is a polyphonic virtual analogue synth with a unique filter sound."
   homepage "https://plugins4free.com/plugin/687"
   depends_on :macos
-  artifact "TAL-U-No-62.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "TAL-U-No-62.vst", "{{user}}/Library/Audio/Plug-Ins/VST/TAL-U-No-62.vst"
+  end
 end
