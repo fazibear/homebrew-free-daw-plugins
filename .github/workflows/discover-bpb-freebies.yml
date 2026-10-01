@@ -6,24 +6,60 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   discover:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Install Lightpanda
+        run: brew install lightpanda-io/browser/lightpanda
+      - name: Find verified macOS installers and create casks
         run: |
           set -euo pipefail
-          curl -fsSL -o "$RUNNER_TEMP/lightpanda" https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux
-          chmod +x "$RUNNER_TEMP/lightpanda"
-          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
-      - name: Collect links from the current BPB monthly thread
-        run: python3 scripts/bpb_freebies.py > bpb-freebies.json
-      - name: Upload review candidates
-        uses: actions/upload-artifact@v4
-        with:
-          name: bpb-monthly-freebies
-          path: bpb-freebies.json
-          if-no-files-found: error
+          python3 scripts/bpb_freebies.py | python3 scripts/bpb_cask_candidates.py | python3 scripts/create_casks.py
+      - name: Open a pull request for each discovered cask
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          base_branch="${GITHUB_REF_NAME}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git ls-files --others --exclude-standard 'Casks/*.rb' | while IFS= read -r file; do
+            test -n "$file"
+            slug="$(basename "$file" .rb)"
+            branch="automation/discovered-bpb-${slug}"
+            pr_title="Add ${slug} cask"
+            matching_prs="$(gh pr list --repo "$GITHUB_REPOSITORY" --state all --search "in:title \"$pr_title\"" --limit 100 --json number,title,labels)"
+            invalid_pr="$(jq -r --arg title "$pr_title" \
+              'first(.[] | select(.title == $title and any(.labels[]; .name == "invalid")) | .number) // empty' \
+              <<< "$matching_prs")"
+            if [[ -n "$invalid_pr" ]]; then
+              echo "Skipping $slug: PR #$invalid_pr is marked invalid"
+              continue
+            fi
+            open_pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number // empty')"
+            git checkout -B "$branch" "origin/${base_branch}"
+            git add "$file"
+            git commit -m "Add ${slug} cask"
+            git push --force-with-lease origin "$branch"
+            plugin_name="$(sed -n 's/^  name "\(.*\)"$/\1/p' "$file")"
+            homepage="$(sed -n 's/^  homepage "\(.*\)"$/\1/p' "$file")"
+            download_url="$(sed -n 's/^  url "\(.*\)"$/\1/p' "$file")"
+            body="Automated BPB freeware discovery candidate."
+            body+=$'\n\nName: '"$plugin_name"
+            body+=$'\nSource: Bedroom Producers Blog monthly freebies thread'
+            body+=$'\nHomepage: '"$homepage"
+            body+=$'\nDownload: '"$download_url"
+            body+=$'\n\nPlease review the plugin, license, download, and installed files.'
+            if [[ -n "$open_pr" ]]; then
+              gh pr edit "$open_pr" --repo "$GITHUB_REPOSITORY" --title "$pr_title" --body "$body"
+            else
+              gh pr create --base "$base_branch" --head "$branch" --title "$pr_title" --body "$body" --label automation
+            fi
+          done

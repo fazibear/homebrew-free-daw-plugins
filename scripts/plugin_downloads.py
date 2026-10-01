@@ -26,19 +26,27 @@ class LinkParser(HTMLParser):
         super().__init__()
         self.links = []
         self.anchor = None
+        self.h1_depth = 0
+        self.h1_text = []
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag.lower() == "h1":
+            self.h1_depth += 1
         if tag.lower() == "a" and attrs.get("href"):
             self.anchor = {"href": attrs["href"], "text": []}
         elif tag.lower() == "img" and self.anchor and attrs.get("alt"):
             self.anchor["text"].append(attrs["alt"])
 
     def handle_data(self, data):
+        if self.h1_depth:
+            self.h1_text.append(data)
         if self.anchor is not None:
             self.anchor["text"].append(data)
 
     def handle_endtag(self, tag):
+        if tag.lower() == "h1" and self.h1_depth:
+            self.h1_depth -= 1
         if tag.lower() == "a" and self.anchor is not None:
             title = re.sub(r"\s+", " ", " ".join(self.anchor["text"])).strip()
             self.links.append((self.anchor["href"], title))
@@ -106,6 +114,7 @@ def file_metadata(url):
 def find_downloads(page_url):
     parser = LinkParser()
     parser.feed(page_html(page_url))
+    product_name = re.sub(r"\s+", " ", " ".join(parser.h1_text)).strip()
     results = []
     seen = set()
     for raw_url, title in parser.links:
@@ -130,6 +139,7 @@ def find_downloads(page_url):
             continue
         results.append({
             "page": page_url,
+            "product_name": product_name,
             "link_text": title,
             "url": metadata["url"],
             "filename": metadata["filename"],

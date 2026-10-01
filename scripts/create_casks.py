@@ -158,6 +158,8 @@ def render(candidate):
     name = slug(display)
     if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
         name = f"{name}-{candidate['format'].lower()}"
+    elif candidate.get("source") == "bpb-freebies" and candidate.get("format") in {"AU", "VST", "VST3", "CLAP", "LV2"}:
+        name = f"{name}-{candidate['format'].lower()}"
     digest = candidate.get("digest", "")
     checksum = f'  sha256 "{digest}"' if re.fullmatch(r"[0-9a-f]{64}", digest) else "  sha256 :no_check"
     filename = candidate["filename"]
