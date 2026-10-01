@@ -8,16 +8,10 @@ cask "promptslice" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "PromptSlice/PromptSlice.component", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.component"
+    copy "PromptSlice/PromptSlice.component", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "PromptSlice/PromptSlice.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/PromptSlice.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/MacOS"
-    copy "PromptSlice/PromptSlice.app/Contents/MacOS/PromptSlice", "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/MacOS/PromptSlice"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/Resources"
-    copy "PromptSlice/PromptSlice.app/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/Resources/RecentFilesMenuTemplate.nib"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents"
-    copy "PromptSlice/PromptSlice.app/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/Info.plist"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents"
-    copy "PromptSlice/PromptSlice.app/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/PkgInfo"
+    copy "PromptSlice/PromptSlice.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/PromptSlice.vst3", recursive: true
+    mkdir_p "{{user}}/Applications"
+    copy "PromptSlice/PromptSlice.app", "{{user}}/Applications/PromptSlice.app", recursive: true
   end
 end
