@@ -6,5 +6,8 @@ cask "sonatina-percussion-vst" do
   desc "Sonatina Percussion is a sampled classical percussion set from the Sonatina Orchestra public domain library."
   homepage "https://plugins4free.com/plugin/2330"
   depends_on :macos
-  artifact "Sonatina Percussion.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Percussion.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Percussion.vst"
+  end
 end
