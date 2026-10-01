@@ -33,6 +33,16 @@ jobs:
             test -n "$file"
             slug="$(basename "$file" .rb)"
             branch="automation/discovered-github-${slug}"
+            pr_title="Add ${slug} cask"
+            matching_prs="$(gh pr list --repo "$GITHUB_REPOSITORY" --state all --search "in:title \"$pr_title\"" --limit 100 \
+              --json number,title,labels)"
+            invalid_pr="$(jq -r --arg title "$pr_title" \
+              'first(.[] | select(.title == $title and any(.labels[]; .name == "invalid")) | .number) // empty' \
+              <<< "$matching_prs")"
+            if [[ -n "$invalid_pr" ]]; then
+              echo "Skipping $slug: PR #$invalid_pr titled '$pr_title' is marked invalid"
+              continue
+            fi
             if [[ "$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$branch" --state open --json number --jq 'length')" -gt 0 ]]; then
               echo "Skipping $slug: an open GitHub discovery PR already exists"
               continue
@@ -55,7 +65,7 @@ jobs:
             pr_url="$(gh pr create \
               --base "$base_branch" \
               --head "$branch" \
-              --title "Add ${slug} cask" \
+              --title "$pr_title" \
               --body "$body" \
               --label automation)"
           done

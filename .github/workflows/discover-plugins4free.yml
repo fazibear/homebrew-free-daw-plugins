@@ -41,15 +41,25 @@ jobs:
           for group in "$groups_dir"/*; do
             key="$(basename "$group")"
             branch="automation/discovered-plugins4free-${key}"
+            group_files="$(tr '\n' ' ' < "$group")"
+            first_file="$(printf '%s\n' $group_files | head -n 1)"
+            plugin_name="$(sed -n 's/^  name "\(.*\)"$/\1/p' "$first_file")"
+            pr_title="Add ${plugin_name} casks"
+            matching_prs="$(gh pr list --repo "$GITHUB_REPOSITORY" --state all --search "in:title \"$pr_title\"" --limit 100 \
+              --json number,title,labels)"
+            invalid_pr="$(jq -r --arg title "$pr_title" \
+              'first(.[] | select(.title == $title and any(.labels[]; .name == "invalid")) | .number) // empty' \
+              <<< "$matching_prs")"
+            if [[ -n "$invalid_pr" ]]; then
+              echo "Skipping $plugin_name: PR #$invalid_pr titled '$pr_title' is marked invalid"
+              continue
+            fi
             open_pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number // empty')"
             if [[ -n "$open_pr" ]]; then
               echo "Refreshing $key from the latest generator for open PR #$open_pr"
             fi
             git checkout -B "$branch" "origin/${base_branch}"
-            group_files="$(tr '\n' ' ' < "$group")"
             git add $group_files
-            first_file="$(printf '%s\n' $group_files | head -n 1)"
-            plugin_name="$(sed -n 's/^  name "\(.*\)"$/\1/p' "$first_file")"
             homepage="$(sed -n 's/^  homepage "\(.*\)"$/\1/p' "$first_file")"
             test -n "$plugin_name"
             git commit -m "Add ${plugin_name} casks"
@@ -60,8 +70,8 @@ jobs:
             done
             body+=$'\nPlease review licensing, checksum, installer behavior, and Homebrew policy.'
             if [[ -n "$open_pr" ]]; then
-              gh pr edit "$open_pr" --repo "$GITHUB_REPOSITORY" --title "Add ${plugin_name} casks" --body "$body"
+              gh pr edit "$open_pr" --repo "$GITHUB_REPOSITORY" --title "$pr_title" --body "$body"
             else
-              gh pr create --base "$base_branch" --head "$branch" --title "Add ${plugin_name} casks" --body "$body" --label automation
+              gh pr create --base "$base_branch" --head "$branch" --title "$pr_title" --body "$body" --label automation
             fi
           done
