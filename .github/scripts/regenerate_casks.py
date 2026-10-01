@@ -78,7 +78,7 @@ def main():
     obsolete_paths = set()
     for path in paths:
         candidate = candidate_for(path)
-        archive = None if candidate["filename"].lower().endswith(".pkg") else archive_members(candidate)
+        archive = None if candidate["filename"].lower().endswith(".pkg") else archive_members(candidate, strict=True)
         if archive is None:
             archive = archive_fallback_from_cask(path)
         candidate["archive_members"] = archive

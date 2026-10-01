@@ -43,7 +43,7 @@ def existing():
         print(f"warning: Homebrew catalog unavailable: {error}", file=sys.stderr)
     return result
 
-def archive_members(candidate):
+def archive_members(candidate, *, strict=False):
     filename = candidate["filename"].lower()
     if not (filename.endswith(".zip") or filename.endswith(".dmg")):
         return None
@@ -123,9 +123,12 @@ def archive_members(candidate):
             artifact_format = None
         return (member, related, prefix, artifact_format) if member else None
     except Exception as error:
-        print(f"warning: could not inspect {candidate['filename']}: {error}", file=sys.stderr)
+        message = f"could not inspect {candidate['filename']}: {error}"
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:
-            print(error.stderr.strip(), file=sys.stderr)
+            message += f"\n{error.stderr.strip()}"
+        if strict:
+            raise RuntimeError(message) from error
+        print(f"warning: {message}", file=sys.stderr)
         return None
 
 def render(candidate, archive_fallback=None):
