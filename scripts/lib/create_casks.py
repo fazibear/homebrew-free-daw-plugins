@@ -234,6 +234,9 @@ def create_casks(candidates):
             continue
         name, content = render(candidate)
         if not name or name in known:
+            if candidate.get("source") == "bpb-freebies":
+                reason = "no installable plugin, app, or package found" if not name else f"{name} already exists locally or in Homebrew"
+                print(f"BPB: cask generator skipped {candidate['filename']}: {reason}", file=sys.stderr)
             continue
         (CASKS / f"{name}.rb").write_text(content)
         known.add(name)

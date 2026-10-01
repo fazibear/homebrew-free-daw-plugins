@@ -61,6 +61,7 @@ def publish_discovery(source, paths):
     repo = repo_env()
     gh_token = os.environ.get("GH_TOKEN")
     groups = {}
+    published = 0
     grouped = source in {"plugins4free", "bpb"}
     if grouped:
         for path in paths:
@@ -117,6 +118,10 @@ def publish_discovery(source, paths):
         else:
             gh("pr", "create", "--base", base_branch(), "--head", branch, "--title", title,
                "--body", body, "--label", "automation", "--repo", repo, token=gh_token)
+        published += 1
+        if source == "bpb":
+            print(f"BPB: {'updated' if open_pr else 'created'} PR for {key}: {len(group)} cask(s)", file=sys.stderr)
+    return published
 
 
 def run_discovery_action(source):
@@ -132,14 +137,27 @@ def run_discovery_action(source):
     else:
         raise ValueError(f"unknown discovery source: {source}")
 
+    totals = {"groups": 0, "candidates": 0, "casks": 0, "prs": 0}
     for candidates in candidate_groups:
+        totals["groups"] += 1
+        totals["candidates"] += len(candidates)
         before = set(_new_casks())
         create_casks(candidates)
         created = sorted(set(_new_casks()) - before)
+        totals["casks"] += len(created)
         if created:
             tokens = ", ".join(path.stem for path in created)
             print(f"Publishing {source} candidate cask(s): {tokens}")
-            publish_discovery(source, created)
+            totals["prs"] += publish_discovery(source, created)
+        elif source == "bpb":
+            print(f"BPB: no casks generated from {len(candidates)} candidate(s) for {candidates[0]['homepage']}", file=sys.stderr)
+    if source == "bpb":
+        print(
+            f"BPB: publishing summary: {totals['groups']} product group(s); "
+            f"{totals['candidates']} installer candidate(s); {totals['casks']} generated cask(s); "
+            f"{totals['prs']} PR(s) created or updated",
+            file=sys.stderr,
+        )
 
 
 def update_action():

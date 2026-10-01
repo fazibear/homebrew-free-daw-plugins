@@ -17,7 +17,8 @@ import urllib.request
 from html.parser import HTMLParser
 
 ARCHIVE_SUFFIXES = (".zip", ".dmg", ".pkg")
-MAC_MARKER = re.compile(r"\b(mac(?:os)?|macintosh|darwin|osx|apple\s*silicon|universal)\b", re.I)
+MAC_INSTALLER_SUFFIXES = (".dmg", ".pkg")
+MAC_MARKER = re.compile(r"(?<![a-z])(mac(?:os)?|macintosh|darwin|osx|apple[\s_-]*silicon|universal|au|audio[\s_-]*units?|component)(?![a-z])", re.I)
 DOWNLOAD_MARKER = re.compile(r"\b(download|installer|install|plugin|vst3?|audio\s*unit|\bau\b|clap)\b", re.I)
 
 
@@ -125,8 +126,9 @@ def find_downloads(page_url):
         if parsed.scheme not in ("http", "https") or target in seen:
             continue
         seen.add(target)
-        hint = f"{title} {target}"
-        if not (MAC_MARKER.search(hint) or DOWNLOAD_MARKER.search(title)):
+        hint = f"{title} {urllib.parse.unquote(target)}"
+        mac_installer_link = urllib.parse.unquote(parsed.path).lower().endswith(MAC_INSTALLER_SUFFIXES)
+        if not (mac_installer_link or MAC_MARKER.search(hint) or DOWNLOAD_MARKER.search(title)):
             continue
         try:
             metadata = file_metadata(target)
@@ -136,7 +138,8 @@ def find_downloads(page_url):
         if not metadata:
             continue
         mac_evidence = f"{hint} {metadata['filename']}"
-        if not MAC_MARKER.search(mac_evidence):
+        mac_installer = metadata["filename"].lower().endswith(MAC_INSTALLER_SUFFIXES)
+        if not mac_installer and not MAC_MARKER.search(mac_evidence):
             print(f"Skipped {target}: archive found, but no macOS platform marker", file=sys.stderr)
             continue
         results.append({
@@ -147,7 +150,7 @@ def find_downloads(page_url):
             "filename": metadata["filename"],
             "content_type": metadata["content_type"],
             "content_length": metadata["content_length"],
-            "platform_evidence": "macOS marker in page link or downloaded filename",
+            "platform_evidence": "macOS installer extension (.pkg/.dmg)" if mac_installer else "macOS marker in page link or downloaded filename",
         })
     return results
 
