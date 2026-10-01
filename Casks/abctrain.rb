@@ -6,5 +6,6 @@ cask "abctrain" do
   desc "Free audio plugin"
   homepage "https://github.com/bogggare567/abcTrain"
   depends_on :macos
-  dmg "abcTrain-macOS-1.6.0.dmg"
+  container type: :dmg
+  pkg "abcTrain-1.6.0.pkg"
 end
