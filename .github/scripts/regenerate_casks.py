@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Regenerate existing Plugins4Free casks in place using the current generator."""
+"""Regenerate discovery casks from current source data with the shared renderer."""
 import re
 import sys
 import urllib.parse
 from pathlib import Path
-from pathlib import PurePosixPath
 
 from create_casks import archive_members, render
+from github_plugins import candidate_from_repository
+from plugins4free_plugins import candidates_from_plugin_page
 
 
 def stanza(source, name):
@@ -20,6 +21,7 @@ def candidate_for(path):
     source = path.read_text()
     token = path.stem
     homepage = stanza(source, "homepage")
+
     if re.fullmatch(r"https://(?:www\.)?plugins4free\.com/plugin/[A-Za-z0-9_-]+/?", homepage):
         if token.endswith("-au"):
             plugin_format = "AU"
@@ -27,72 +29,54 @@ def candidate_for(path):
             plugin_format = "VST"
         else:
             raise ValueError(f"{path}: expected an AU or VST Plugins4Free cask token")
-        source_name = "plugins4free"
-    elif homepage.startswith("https://github.com/"):
-        plugin_format = None
-        source_name = "github"
+        candidates = candidates_from_plugin_page(homepage)
+        candidate = next((item for item in candidates if item.get("format") == plugin_format), None)
+        if candidate is None:
+            raise ValueError(f"{path}: Plugins4Free page has no current {plugin_format} download")
+    elif urllib.parse.urlparse(homepage).netloc.lower() == "github.com":
+        parts = [part for part in urllib.parse.urlparse(homepage).path.split("/") if part]
+        if len(parts) < 2:
+            raise ValueError(f"{path}: could not determine GitHub repository from homepage")
+        repo = {"full_name": "/".join(parts[:2]), "name": parts[1]}
+        candidate = candidate_from_repository(repo)
+        if candidate is None:
+            raise ValueError(f"{path}: GitHub repository has no current macOS release candidate")
     else:
         raise ValueError(f"{path}: unsupported discovery source homepage: {homepage}")
 
-    url = stanza(source, "url")
-    filename = Path(urllib.parse.unquote(urllib.parse.urlparse(url).path)).name
-    if not filename:
-        raise ValueError(f"{path}: could not determine download filename")
-
-    version_match = re.search(r'^  version "([^"]*)"$', source, re.M)
-    sha_match = re.search(r'^  sha256 ("([0-9a-f]{64})"|:no_check)$', source, re.M)
-    if not version_match or not sha_match:
-        raise ValueError(f"{path}: missing version or sha256 stanza")
-
-    return {
-        "name": stanza(source, "name"),
-        "description": stanza(source, "desc"),
-        "homepage": homepage,
-        "url": url,
-        "filename": filename,
-        "version": version_match.group(1),
-        "digest": sha_match.group(2) or "",
-        "format": plugin_format,
-        "source": source_name,
-    }
-
-
-def archive_fallback_from_cask(path, source):
-    """Reuse the existing install target if a remote archive cannot be inspected."""
-    bundle_match = re.search(r'^    move "([^"]+\.(?:component|vst3?|clap))",', source, re.M | re.I)
-    if bundle_match:
-        bundle = bundle_match.group(1)
-        return (bundle, [], str(PurePosixPath(bundle).parent), None)
-
-    pkg_match = re.search(r'^  pkg "([^"]+)"$', source, re.M)
-    if pkg_match:
-        return (pkg_match.group(1), [], ".", None)
-
-    raise ValueError(f"{path}: archive is unavailable and existing cask has no recognizable install target")
+    candidate["name"] = stanza(source, "name")
+    candidate["description"] = stanza(source, "desc")
+    candidate["homepage"] = homepage
+    return candidate
 
 
 def main():
     if len(sys.argv) < 2:
-        raise SystemExit("usage: regenerate_casks.py Casks/<plugin>-au.rb [...]")
+        raise SystemExit("usage: regenerate_casks.py Casks/<discovered-cask>.rb [...]")
 
     paths = [Path(argument) for argument in sys.argv[1:]]
     source_paths = {path.resolve() for path in paths}
     regenerated = {}
     obsolete_paths = set()
     for path in paths:
-        source = path.read_text()
         candidate = candidate_for(path)
-        archive = None
-        if not candidate["filename"].lower().endswith(".pkg"):
-            archive = archive_members(candidate)
-            if archive is None:
-                archive = archive_fallback_from_cask(path, source)
+        archive = None if candidate["filename"].lower().endswith(".pkg") else archive_members(candidate)
+        candidate["archive_members"] = archive
         name, content = render(candidate, archive_fallback=archive)
         if not name or not content:
-            name, content = render(candidate, archive_fallback_from_cask(path, source))
-        if not name or not content:
-            raise ValueError(f"{path}: current generator could not reproduce this cask")
-        target = path.with_name(f"{name}.rb")
+            raise ValueError(f"{path}: current source candidate could not produce a cask")
+        if name != path.stem:
+            content, replacements = re.subn(
+                r'^cask "[^"]+" do$',
+                f'cask "{path.stem}" do',
+                content,
+                count=1,
+                flags=re.M,
+            )
+            if replacements != 1:
+                raise ValueError(f"{path}: could not preserve the existing cask token")
+            name = path.stem
+        target = path
         if target.exists() and target.resolve() not in source_paths:
             raise ValueError(f"{path}: regenerated cask {target} already exists")
         if target in regenerated and regenerated[target] != content:
