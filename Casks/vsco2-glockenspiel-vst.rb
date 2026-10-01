@@ -6,5 +6,8 @@ cask "vsco2-glockenspiel-vst" do
   desc "VSCO2 Glockenspiel is a sampled glockenspiel ."
   homepage "https://plugins4free.com/plugin/2722"
   depends_on :macos
-  artifact "VSCO2 Glockenspiel.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "VSCO2 Glockenspiel.vst", "{{user}}/Library/Audio/Plug-Ins/VST/VSCO2 Glockenspiel.vst"
+  end
 end
