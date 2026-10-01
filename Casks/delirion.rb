@@ -9,5 +9,9 @@ cask "delirion" do
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
     move "AU/Delirion.component", "{{user}}/Library/Audio/Plug-Ins/Components/Delirion.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    move "VST3/Delirion.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Delirion.vst3"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources"
+    copy "README.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/README.txt"
   end
 end
