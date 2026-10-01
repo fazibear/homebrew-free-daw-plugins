@@ -6,12 +6,7 @@ cask "montagem-widener" do
   desc "Free audio plugin"
   homepage "https://github.com/nabsei/montagem-widener"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "Montagem Widener.component", "{{user}}/Library/Audio/Plug-Ins/Components/Montagem Widener.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "Montagem Widener.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Montagem Widener.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "Montagem Widener.app", "{{user}}/Applications/Montagem Widener.app", recursive: true
-  end
+  artifact "Montagem Widener.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Montagem Widener.component"
+  artifact "Montagem Widener.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/Montagem Widener.vst3"
+  app "Montagem Widener.app", target: "#{Dir.home}/Applications/Montagem Widener.app"
 end
