@@ -6,12 +6,7 @@ cask "promptslice" do
   desc "Free audio plugin"
   homepage "https://github.com/vasylNaumenko/promptslice"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "PromptSlice/PromptSlice.component", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "PromptSlice/PromptSlice.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/PromptSlice.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "PromptSlice/PromptSlice.app", "{{user}}/Applications/PromptSlice.app", recursive: true
-  end
+  artifact "PromptSlice/PromptSlice.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/PromptSlice.component"
+  artifact "PromptSlice/PromptSlice.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/PromptSlice.vst3"
+  app "PromptSlice/PromptSlice.app", target: "#{Dir.home}/Applications/PromptSlice.app"
 end
