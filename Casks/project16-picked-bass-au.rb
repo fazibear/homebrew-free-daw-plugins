@@ -6,5 +6,8 @@ cask "project16-picked-bass-au" do
   desc "Project16 Picked Bass is a sampled Rickenbacker 4001 bass played with a pick."
   homepage "https://plugins4free.com/plugin/2320"
   depends_on :macos
-  artifact "Project16 Picked Bass.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Project16 Picked Bass.component", "{{user}}/Library/Audio/Plug-Ins/Components/Project16 Picked Bass.component"
+  end
 end
