@@ -36,28 +36,37 @@ jobs:
           gh pr checkout "$INPUT_PR" --repo "$REPOSITORY"
           echo "number=$INPUT_PR" >> "$GITHUB_OUTPUT"
       - name: Validate Ruby syntax
+        id: ruby_syntax
         run: |
           set -euo pipefail
+          exec > >(tee "$RUNNER_TEMP/validate-ruby-syntax.log") 2>&1
           base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
           head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
           files="$(git diff --diff-filter=AM --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
-          test -n "$files"
-          for file in $files; do test -f "$file"; ruby -c "$file"; done
+          [[ -n "$files" ]] || { echo "No added or modified Casks/*.rb files found in the PR."; exit 1; }
+          for file in $files; do
+            [[ -f "$file" ]] || { echo "Changed cask file is missing: $file"; exit 1; }
+            ruby -c "$file"
+          done
       - name: Validate cask declarations
+        id: cask_declarations
         run: |
           set -euo pipefail
+          exec > >(tee "$RUNNER_TEMP/validate-cask-declarations.log") 2>&1
           base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
           head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
           files="$(git diff --diff-filter=AM --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
           for file in $files; do
-            grep -Eq '^cask "[a-z0-9][a-z0-9-]*" do$' "$file"
-            grep -Eq '^  url "https?://' "$file"
-            grep -Eq '^  sha256 ("[0-9a-f]{64}"|:no_check)$' "$file"
-            grep -Eq '^  depends_on :macos$' "$file"
+            grep -Eq '^cask "[a-z0-9][a-z0-9-]*" do$' "$file" || { echo "$file: missing or invalid cask token declaration"; exit 1; }
+            grep -Eq '^  url "https?://' "$file" || { echo "$file: missing or invalid HTTP(S) URL"; exit 1; }
+            grep -Eq '^  sha256 ("[0-9a-f]{64}"|:no_check)$' "$file" || { echo "$file: missing or invalid sha256"; exit 1; }
+            grep -Eq '^  depends_on :macos$' "$file" || { echo "$file: missing macOS dependency declaration"; exit 1; }
           done
       - name: Install changed casks
+        id: install_casks
         run: |
           set -euo pipefail
+          exec > >(tee "$RUNNER_TEMP/install-changed-casks.log") 2>&1
           base_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json baseRefOid --jq .baseRefOid)"
           head_sha="$(gh pr view "${{ steps.pr.outputs.number }}" --json headRefOid --jq .headRefOid)"
           files="$(git diff --diff-filter=AM --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')"
@@ -72,7 +81,24 @@ jobs:
         if: ${{ failure() && steps.pr.outputs.number != '' }}
         env:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
+          FAILED_STEP: ${{ steps.ruby_syntax.outcome == 'failure' && 'Validate Ruby syntax' || steps.cask_declarations.outcome == 'failure' && 'Validate cask declarations' || steps.install_casks.outcome == 'failure' && 'Install changed casks' || 'Prepare or run cask validation' }}
+          FAILED_LOG: ${{ steps.ruby_syntax.outcome == 'failure' && format('{0}/validate-ruby-syntax.log', runner.temp) || steps.cask_declarations.outcome == 'failure' && format('{0}/validate-cask-declarations.log', runner.temp) || steps.install_casks.outcome == 'failure' && format('{0}/install-changed-casks.log', runner.temp) || '' }}
         run: |
           set -euo pipefail
-          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --body "Cask validation failed. Review the [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for the failing check and error output."
+          comment_file="$RUNNER_TEMP/cask-validation-failure.md"
+          {
+            echo "Cask validation failed during **$FAILED_STEP**."
+            if [[ -n "$FAILED_LOG" && -f "$FAILED_LOG" ]]; then
+              echo
+              echo '```text'
+              tail -c 4000 "$FAILED_LOG"
+              echo
+              echo '```'
+            else
+              echo
+              echo "No command output was captured. Check the workflow run for details."
+            fi
+            echo
+            echo "Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } > "$comment_file"
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$comment_file"
