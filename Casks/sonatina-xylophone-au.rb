@@ -6,5 +6,8 @@ cask "sonatina-xylophone-au" do
   desc "Sonatina Xylophone is a sampled xylophone from the Sonatina Orchestra public domain library."
   homepage "https://plugins4free.com/plugin/2332"
   depends_on :macos
-  artifact "Sonatina Xylophone.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Sonatina Xylophone.component", "{{user}}/Library/Audio/Plug-Ins/Components/Sonatina Xylophone.component"
+  end
 end
