@@ -100,7 +100,18 @@ def update(path):
     if not token or not content:
         return "skip", f"could not generate a cask from release asset {asset['name']}"
     if token != path.stem:
-        return "skip", f"generated cask token {token} differs from existing token {path.stem}"
+        format_tokens = {f"{token}-{suffix}" for suffix in ("au", "vst", "vst3", "clap", "lv2")}
+        if path.stem not in format_tokens:
+            return "skip", f"generated cask token {token} differs from existing token {path.stem}"
+        content, replacements = re.subn(
+            r'^cask "[^"]+" do$',
+            f'cask "{path.stem}" do',
+            content,
+            count=1,
+            flags=re.M,
+        )
+        if replacements != 1:
+            return "skip", f"could not preserve existing cask token {path.stem}"
     if content == source:
         return "current", f"latest release {latest} produces no cask change"
     path.write_text(content)

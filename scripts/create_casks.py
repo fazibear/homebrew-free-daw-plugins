@@ -143,6 +143,7 @@ def archive_members(candidate, *, strict=False):
         related = [
             name for name in names
             if not any(name == root or name.startswith(f"{root}/") for root in bundle_paths)
+            and name.casefold() not in RESOURCE_FORMATS
         ]
         print(
             f"Cask generator: {candidate['filename']} contains {len(bundle_paths)} plugin bundle(s): "

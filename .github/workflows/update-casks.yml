@@ -26,10 +26,8 @@ jobs:
         run: |
           set -euo pipefail
           base_branch="${GITHUB_REF_NAME}"
-          branch="automation/cask-updates"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B "$branch" "origin/${base_branch}"
           python3 scripts/update_casks.py
 
           changed_files="$(git diff --name-only -- Casks)"
@@ -38,22 +36,57 @@ jobs:
             exit 0
           fi
 
-          git add -- Casks
-          git commit -m "Update outdated casks"
-          git push --force-with-lease origin "$branch"
-
-          body="Automated update check for versioned casks using their GitHub Releases."$'\n\n''Updated casks:'
+          groups_dir="$RUNNER_TEMP/cask-update-groups"
+          mkdir -p "$groups_dir"
           while IFS= read -r file; do
-            old_version="$(git show "origin/${base_branch}:${file}" | sed -n 's/^  version "\([^"]*\)"$/\1/p' | head -n 1)"
-            new_version="$(sed -n 's/^  version "\([^"]*\)"$/\1/p' "$file" | head -n 1)"
-            cask_token="$(basename "$file" .rb)"
-            body+=$'\n- '"$cask_token: $old_version → $new_version"
+            [[ -n "$file" ]] || continue
+            token="$(basename "$file" .rb)"
+            case "$token" in
+              *-vst3) plugin_key="${token%-vst3}" ;;
+              *-vst) plugin_key="${token%-vst}" ;;
+              *-au) plugin_key="${token%-au}" ;;
+              *-clap) plugin_key="${token%-clap}" ;;
+              *-lv2) plugin_key="${token%-lv2}" ;;
+              *) plugin_key="$token" ;;
+            esac
+            printf '%s\n' "$file" >> "$groups_dir/$plugin_key"
           done <<< "$changed_files"
-          body+=$'\n\nPlease review the updated versions, download URLs, and checksums.'
-          open_pr="$(gh pr list --repo "$REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number // empty')"
-          if [[ -n "$open_pr" ]]; then
-            gh pr edit "$open_pr" --repo "$REPOSITORY" --title "Update outdated casks" --body "$body"
-          else
-            gh pr create --repo "$REPOSITORY" --base "$base_branch" --head "$branch" \
-              --title "Update outdated casks" --body "$body" --label automation
-          fi
+
+          for group in "$groups_dir"/*; do
+            plugin_key="$(basename "$group")"
+            branch="automation/cask-updates-${plugin_key}"
+            group_files=()
+            while IFS= read -r file; do group_files+=("$file"); done < "$group"
+            patch_file="$RUNNER_TEMP/${plugin_key}.patch"
+            git diff --binary -- "${group_files[@]}" > "$patch_file"
+            [[ -s "$patch_file" ]] || continue
+
+            git reset --hard "origin/${base_branch}"
+            git checkout -B "$branch" "origin/${base_branch}"
+            git apply "$patch_file"
+            git add -- "${group_files[@]}"
+            git commit -m "Update ${plugin_key} casks"
+            git push --force-with-lease origin "$branch"
+
+            first_file="${group_files[0]}"
+            plugin_name="$(sed -n 's/^  name "\(.*\)"$/\1/p' "$first_file")"
+            for suffix in " AU" " VST3" " VST" " CLAP" " LV2" "-AU" "-VST3" "-VST" "-CLAP" "-LV2"; do
+              case "$plugin_name" in *"$suffix") plugin_name="${plugin_name%$suffix}" ;; esac
+            done
+            pr_title="Update ${plugin_name:-$plugin_key} casks"
+            body="Automated update check for versioned casks using their GitHub Releases."$'\n\n''Updated casks:'
+            for file in "${group_files[@]}"; do
+              old_version="$(git show "origin/${base_branch}:${file}" | sed -n 's/^  version "\([^"]*\)"$/\1/p' | head -n 1)"
+              new_version="$(sed -n 's/^  version "\([^"]*\)"$/\1/p' "$file" | head -n 1)"
+              cask_token="$(basename "$file" .rb)"
+              body+=$'\n- '"$cask_token: $old_version → $new_version"
+            done
+            body+=$'\n\nPlease review the updated versions, download URLs, and checksums.'
+            open_pr="$(gh pr list --repo "$REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number // empty')"
+            if [[ -n "$open_pr" ]]; then
+              gh pr edit "$open_pr" --repo "$REPOSITORY" --title "$pr_title" --body "$body"
+            else
+              gh pr create --repo "$REPOSITORY" --base "$base_branch" --head "$branch" \
+                --title "$pr_title" --body "$body" --label automation
+            fi
+          done
