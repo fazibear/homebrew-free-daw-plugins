@@ -92,7 +92,7 @@ def archive_members(candidate, *, strict=False):
         entries = [(name, is_dir) for name, is_dir in entries if not is_metadata_path(name)]
         names = [name for name, is_dir in entries if not is_dir]
         all_suffixes = tuple(PLUGIN_DIRS)
-        app_suffixes = () if candidate.get("source") == "plugins4free" else (".app",)
+        app_suffixes = (".app",)
         bundle_suffixes = all_suffixes + app_suffixes
         suffixes = PLUGIN_SUFFIXES_BY_FORMAT.get(candidate.get("format"), all_suffixes)
         bundle_roots = []
@@ -122,35 +122,29 @@ def archive_members(candidate, *, strict=False):
         if member.lower().endswith((".pkg", ".app")):
             return (member, [], str(Path(member).parent), None)
 
-        # Keep every plugin bundle as a separate artifact. Treating files from
-        # sibling bundles as resources for the first match installs AU/VST3/LV2
-        # contents into the wrong plugin directory.
-        bundle_paths = [
+        # Keep top-level bundles as artifacts. A format bundle nested inside
+        # an app or another plugin bundle belongs to that outer bundle.
+        plugin_roots = [
             root for root in bundle_roots
             if root.lower().endswith(all_suffixes)
             and (candidate.get("source") != "plugins4free" or root.lower().endswith(suffixes))
         ]
-        bundle_paths = list(dict.fromkeys(bundle_paths))
-        # A plugin bundle can contain another format's bundle as an internal
-        # resource (for example, a VST3 binary bundled inside a component's
-        # Resources directory). Keep that nested path inside its parent bundle
-        # instead of generating a second move for it.
+        app_roots = [root for root in bundle_roots if root.lower().endswith(".app")]
         outermost_bundles = []
-        for root in sorted(bundle_paths, key=lambda path: (len(Path(path).parts), path)):
+        for root in sorted(set(plugin_roots + app_roots), key=lambda path: (len(Path(path).parts), path)):
             if not any(root.startswith(f"{parent}/") for parent in outermost_bundles):
                 outermost_bundles.append(root)
-        bundle_paths = outermost_bundles
-        related = [
-            name for name in names
-            if not any(name == root or name.startswith(f"{root}/") for root in bundle_paths)
-            and name.casefold() not in RESOURCE_FORMATS
-        ]
+        bundle_paths = [root for root in outermost_bundles if root.lower().endswith(all_suffixes)]
+        app_paths = [root for root in outermost_bundles if root.lower().endswith(".app")]
+        if not bundle_paths and app_paths:
+            app_bundle = app_paths[0]
+            return (app_bundle, [], str(Path(app_bundle).parent), None)
         print(
-            f"Cask generator: {candidate['filename']} contains {len(bundle_paths)} plugin bundle(s): "
-            f"{', '.join(bundle_paths)}; {len(related)} sibling file(s)",
+            f"Cask generator: {candidate['filename']} contains {len(bundle_paths)} plugin bundle(s) "
+            f"and {len(app_paths)} app bundle(s)",
             file=sys.stderr,
         )
-        return {"bundles": bundle_paths, "related": related}
+        return {"bundles": bundle_paths, "apps": app_paths}
     except Exception as error:
         message = f"could not inspect {candidate['filename']}: {error}"
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:
@@ -181,12 +175,12 @@ def render(candidate, archive_fallback=None):
         if not archive:
             return None, None
         if isinstance(archive, tuple):
-            bundle, related, prefix, _ = archive
+            bundle, _, _, _ = archive
             bundles = [bundle]
+            apps = []
         else:
             bundles = archive.get("bundles", [])
-            related = archive.get("related", [])
-            prefix = "."
+            apps = archive.get("apps", [])
             bundle = bundles[0] if bundles else ""
         if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
@@ -210,31 +204,11 @@ def render(candidate, archive_fallback=None):
                 install += f'    mkdir_p "{{{{user}}}}/{plugin_dir}"\n'
                 install += f'    move "{plugin_bundle}", "{{{{user}}}}/{bundle_target}"\n'
 
-            # Preserve loose supporting files, while leaving files inside
-            # recognized plugin bundles with their owning bundle.
-            candidate_format = (candidate.get("format") or "VST3").lower()
-            default_resource_format = RESOURCE_FORMATS.get(candidate_format, "VST3")
-            for member in related:
-                relative = member[len(prefix):] if prefix != "." and member.startswith(prefix) else member
-                relative_parts = Path(relative).parts
-                format_index = next(
-                    (index for index, part in enumerate(relative_parts) if part.lower() in RESOURCE_FORMATS),
-                    None,
-                )
-                resource_format = RESOURCE_FORMATS.get(relative_parts[format_index].lower()) if format_index is not None else None
-                if format_index is not None:
-                    relative = Path(*relative_parts[format_index + 1:]).as_posix()
-                    if relative == ".":
-                        relative = Path(relative_parts[format_index]).name
-                if resource_format is None and len(bundles) == 1:
-                    resource_format = PLUGIN_DIRS.get(Path(bundles[0]).suffix.lower(), default_resource_format)
-                if resource_format is None:
-                    resource_format = "Resources"
-                resource_dir = f"Library/Audio/Plug-Ins/{resource_format}"
-                resource_target = f"{resource_dir}/{relative}"
-                resource_parent = str(Path(resource_target).parent)
-                install += f'    mkdir_p "{{{{user}}}}/{resource_parent}"\n'
-                install += f'    copy "{member}", "{{{{user}}}}/{resource_target}"\n'
+            for app_bundle in apps:
+                app_target = f"Applications/{Path(app_bundle).name}"
+                install += f'    mkdir_p "{{{{user}}}}/Applications"\n'
+                install += f'    copy "{app_bundle}", "{{{{user}}}}/{app_target}"\n'
+
             install += "  end"
     container = "  container type: :dmg\n" if filename.lower().endswith(".dmg") else ""
     return name, f'''cask "{name}" do
