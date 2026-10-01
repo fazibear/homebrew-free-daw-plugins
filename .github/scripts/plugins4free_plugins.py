@@ -108,8 +108,9 @@ def candidates_from_plugin_page(url, fallback_title=""):
     print(f"Plugins4Free: found {len(parser.links)} download link(s), {len(mac_links)} Mac OSX link(s)", file=sys.stderr)
     candidates = []
     for link_title, file_name in mac_links:
-        download = file_name if urllib.parse.urlparse(file_name).scheme else f"https://alt1.plugins4free.com/get_plug/{urllib.parse.unquote(file_name)}"
-        candidate_filename = download.rsplit("/", 1)[-1].split("?", 1)[0]
+        download_path = urllib.parse.urlparse(file_name).path or file_name
+        candidate_filename = urllib.parse.unquote(download_path.rsplit("/", 1)[-1].split("?", 1)[0])
+        download = f"https://plugins4free.com/get_plug/{urllib.parse.quote(candidate_filename)}"
         print(f"Plugins4Free: macOS filename {candidate_filename}", file=sys.stderr)
         platform_text = f"{title} {link_title} {download}"
         is_macos = re.search(r"(mac|macos|darwin|osx|universal)", platform_text, re.I)
