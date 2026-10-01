@@ -6,5 +6,8 @@ cask "aspen-trumpet-2-vst" do
   desc "Aspen Trumpet 2."
   homepage "https://plugins4free.com/plugin/3322"
   depends_on :macos
-  artifact "Aspen Trumpet 2.vst3.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Aspen Trumpet 2.vst3.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Aspen Trumpet 2.vst3.vst"
+  end
 end
