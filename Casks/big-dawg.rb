@@ -6,12 +6,7 @@ cask "big-dawg" do
   desc "Free audio plugin"
   homepage "https://github.com/orphicaxiom/big-dawg"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "BigDawg-v0.2.0-macOS/BigDawg.component", "{{user}}/Library/Audio/Plug-Ins/Components/BigDawg.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "BigDawg-v0.2.0-macOS/BigDawg.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/BigDawg.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "BigDawg-v0.2.0-macOS/BigDawg.app", "{{user}}/Applications/BigDawg.app", recursive: true
-  end
+  artifact "BigDawg-v0.2.0-macOS/BigDawg.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/BigDawg.component"
+  artifact "BigDawg-v0.2.0-macOS/BigDawg.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/BigDawg.vst3"
+  app "BigDawg-v0.2.0-macOS/BigDawg.app", target: "#{Dir.home}/Applications/BigDawg.app"
 end
