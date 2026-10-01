@@ -6,5 +6,8 @@ cask "sonatina-cello-vst" do
   desc "Sonatina Cello is a sampled Cello ."
   homepage "https://plugins4free.com/plugin/2299"
   depends_on :macos
-  artifact "Sonatina Cello.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Cello.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Cello.vst"
+  end
 end
