@@ -9,9 +9,5 @@ cask "nsynth1-vst" do
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
     move "nSynth1.vst", "{{user}}/Library/Audio/Plug-Ins/VST/nSynth1.vst"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST/__MACOSX/nSynth1.vst"
-    copy "__MACOSX/nSynth1.vst/._Icon", "{{user}}/Library/Audio/Plug-Ins/VST/__MACOSX/nSynth1.vst/._Icon"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST/__MACOSX"
-    copy "__MACOSX/._nSynth1.vst", "{{user}}/Library/Audio/Plug-Ins/VST/__MACOSX/._nSynth1.vst"
   end
 end
