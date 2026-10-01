@@ -6,5 +6,8 @@ cask "gabcis-phaselock-sub" do
   desc "Free audio plugin"
   homepage "https://github.com/rcptr2/gabcis-phaselock-sub"
   depends_on :macos
-  artifact "PhaseLock Sub.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    move "PhaseLock Sub.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/PhaseLock Sub.vst3"
+  end
 end

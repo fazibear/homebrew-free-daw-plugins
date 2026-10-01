@@ -1,6 +1,6 @@
 cask "ami-sampler" do
   version "0.7.2"
-  sha256 :no_check
+  sha256 "64a8c4aa425784a7f346ed0e1ec789503676869ea7de7c359884181234f14454"
   url "https://github.com/astriiddev/Ami-Sampler-VST/releases/download/v0.7.2/AmiSampler_macOS.pkg"
   name "Ami-Sampler"
   desc "Free audio plugin"
