@@ -101,16 +101,18 @@ jobs:
             fi
           }
 
-          failed=0
+          failed_prs=()
           for pr_number in "${pr_numbers[@]}"; do
             if ! regenerate_one "$pr_number"; then
               echo "Failed to regenerate PR #$pr_number; continuing with the next PR"
-              failed=$((failed + 1))
+              failed_prs+=("$pr_number")
               git rebase --abort 2>/dev/null || true
               git reset --hard
             fi
           done
-          if ((failed > 0)); then
-            echo "$failed PR(s) failed regeneration"
+          if ((${#failed_prs[@]} > 0)); then
+            failed_count=${#failed_prs[@]}
+            failed_list="$(IFS=', '; echo "${failed_prs[*]}")"
+            echo "$failed_count PR(s) failed regeneration: #$failed_list"
             exit 1
           fi
