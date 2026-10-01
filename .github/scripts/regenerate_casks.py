@@ -19,16 +19,20 @@ def stanza(source, name):
 def candidate_for(path):
     source = path.read_text()
     token = path.stem
-    if token.endswith("-au"):
-        plugin_format = "AU"
-    elif token.endswith("-vst"):
-        plugin_format = "VST"
-    else:
-        raise ValueError(f"{path}: expected an AU or VST Plugins4Free cask token")
-
     homepage = stanza(source, "homepage")
-    if not re.fullmatch(r"https://(?:www\.)?plugins4free\.com/plugin/[A-Za-z0-9_-]+/?", homepage):
-        raise ValueError(f"{path}: not a Plugins4Free plugin homepage")
+    if re.fullmatch(r"https://(?:www\.)?plugins4free\.com/plugin/[A-Za-z0-9_-]+/?", homepage):
+        if token.endswith("-au"):
+            plugin_format = "AU"
+        elif token.endswith("-vst"):
+            plugin_format = "VST"
+        else:
+            raise ValueError(f"{path}: expected an AU or VST Plugins4Free cask token")
+        source_name = "plugins4free"
+    elif homepage.startswith("https://github.com/"):
+        plugin_format = None
+        source_name = "github"
+    else:
+        raise ValueError(f"{path}: unsupported discovery source homepage: {homepage}")
 
     url = stanza(source, "url")
     filename = Path(urllib.parse.unquote(urllib.parse.urlparse(url).path)).name
@@ -49,7 +53,7 @@ def candidate_for(path):
         "version": version_match.group(1),
         "digest": sha_match.group(2) or "",
         "format": plugin_format,
-        "source": "plugins4free",
+        "source": source_name,
     }
 
 

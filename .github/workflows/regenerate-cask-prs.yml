@@ -1,11 +1,11 @@
-name: Regenerate Plugins4Free cask PRs
-run-name: Regenerate Plugins4Free cask PRs
+name: Refresh automated cask PRs
+run-name: Refresh automated cask PRs
 
 on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "Optional PR number; leave blank to regenerate all open Plugins4Free discovery PRs"
+        description: "Optional PR number; leave blank to regenerate all open discovery cask PRs"
         required: false
         type: number
 
@@ -41,19 +41,19 @@ jobs:
             pr_numbers=("$PR_NUMBER")
           else
             pr_numbers=()
-            open_prs="$(gh pr list --repo "$REPOSITORY" --state open --limit 100 --base main \
+            open_prs="$(gh pr list --repo "$REPOSITORY" --state open --limit 100 \
               --json number,author,headRefName,headRepository,labels)"
             echo "Open PRs returned by gh: $(jq 'length' <<< "$open_prs")"
             while IFS= read -r number; do
               pr_numbers+=("$number")
             done < <(jq -r --arg bot "$BOT_LOGIN" --arg repo "$REPOSITORY" \
-              '.[] | select(.author.login == $bot and (.headRefName | startswith("automation/discovered-plugins4free-")) and .headRepository.nameWithOwner == $repo and ([.labels[].name] | index("automation"))) | .number' \
+              '.[] | select(.author.login == $bot and ((.headRefName | startswith("automation/discovered-plugins4free-")) or (.headRefName | startswith("automation/discovered-github-"))) and .headRepository.nameWithOwner == $repo and ([.labels[].name] | index("automation"))) | .number' \
               <<< "$open_prs")
-            echo "Matching Plugins4Free discovery PRs: ${#pr_numbers[@]} (author=$BOT_LOGIN, branch prefix=automation/discovered-plugins4free-, label=automation)"
+            echo "Matching open discovery PRs: ${#pr_numbers[@]}"
           fi
 
           if ((${#pr_numbers[@]} == 0)); then
-            echo "No matching open Plugins4Free discovery PRs found."
+            echo "No matching open discovery cask PRs found."
             exit 0
           fi
 
@@ -73,7 +73,7 @@ jobs:
             head_repo="$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")"
             author="$(jq -r '.author.login' <<< "$metadata")"
             has_label="$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")"
-            [[ "$head_ref" == automation/discovered-plugins4free-* ]] || return 1
+            [[ "$head_ref" == automation/discovered-plugins4free-* || "$head_ref" == automation/discovered-github-* ]] || return 1
             [[ "$head_repo" == "$REPOSITORY" ]] || return 1
             [[ "$author" == "$BOT_LOGIN" ]] || return 1
             [[ "$has_label" == true ]] || return 1
@@ -104,7 +104,7 @@ jobs:
 
             if ! git diff --quiet -- Casks; then
               git add -- Casks
-              git commit -m "Regenerate Plugins4Free casks" || return 1
+              git commit -m "Regenerate discovery casks" || return 1
             fi
 
             if [[ "$(git rev-parse HEAD)" != "$original_head" ]]; then
