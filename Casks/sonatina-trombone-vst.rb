@@ -6,5 +6,8 @@ cask "sonatina-trombone-vst" do
   desc "Sonatina Trombone is a sampled trombone ."
   homepage "https://plugins4free.com/plugin/2306"
   depends_on :macos
-  artifact "Sonatina Trombone.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Trombone.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Trombone.vst"
+  end
 end
