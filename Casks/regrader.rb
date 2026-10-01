@@ -6,12 +6,7 @@ cask "regrader" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/regrader"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    copy "VST/regrader.vst", "{{user}}/Library/Audio/Plug-Ins/VST/regrader.vst", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "VST3/regrader.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/regrader.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "AU/Regrader AUV3.app", "{{user}}/Applications/Regrader AUV3.app", recursive: true
-  end
+  artifact "VST/regrader.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/regrader.vst"
+  artifact "VST3/regrader.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/regrader.vst3"
+  app "AU/Regrader AUV3.app", target: "#{Dir.home}/Applications/Regrader AUV3.app"
 end
