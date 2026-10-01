@@ -6,5 +6,8 @@ cask "delirion" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/delirion"
   depends_on :macos
-  artifact "AU/Delirion.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "AU/Delirion.component", "{{user}}/Library/Audio/Plug-Ins/Components/Delirion.component"
+  end
 end
