@@ -6,5 +6,8 @@ cask "sonatina-clarinet-vst" do
   desc "Sonatina Clarinet is a sampled clarinet ."
   homepage "https://plugins4free.com/plugin/2311"
   depends_on :macos
-  artifact "Sonatina Clarinet.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Clarinet.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Clarinet.vst"
+  end
 end
