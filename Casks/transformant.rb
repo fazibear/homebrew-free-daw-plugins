@@ -6,12 +6,7 @@ cask "transformant" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/transformant"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    copy "VST/transformant.vst", "{{user}}/Library/Audio/Plug-Ins/VST/transformant.vst", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "VST3/transformant.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/transformant.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "AU/Transformant AUV3.app", "{{user}}/Applications/Transformant AUV3.app", recursive: true
-  end
+  artifact "VST/transformant.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/transformant.vst"
+  artifact "VST3/transformant.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/transformant.vst3"
+  app "AU/Transformant AUV3.app", target: "#{Dir.home}/Applications/Transformant AUV3.app"
 end
