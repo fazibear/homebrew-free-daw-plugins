@@ -77,17 +77,19 @@ def archive_members(candidate):
         names = [name for name, is_dir in entries if not is_dir]
         formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
         all_suffixes = (".component", ".vst", ".vst3", ".clap")
+        app_suffixes = () if candidate.get("source") == "plugins4free" else (".app",)
+        bundle_suffixes = all_suffixes + app_suffixes
         suffixes = formats.get(candidate.get("format"), all_suffixes)
         bundle_roots = []
         for name, is_dir in entries:
             if name.lower().endswith(".pkg"):
                 bundle_roots.append(name)
-            elif is_dir and name.lower().endswith(all_suffixes):
+            elif is_dir and name.lower().endswith(bundle_suffixes):
                 bundle_roots.append(name)
             if not is_dir:
                 parts = name.split("/")
                 for index, part in enumerate(parts):
-                    if part.lower().endswith(suffixes + all_suffixes + (".pkg",)):
+                    if part.lower().endswith(suffixes + bundle_suffixes + (".pkg",)):
                         root = "/".join(parts[:index + 1])
                         if root not in bundle_roots:
                             bundle_roots.append(root)
@@ -96,8 +98,10 @@ def archive_members(candidate):
             member = next((root for root in bundle_roots if root.lower().endswith(suffixes)), None)
         if member is None:
             member = next((root for root in bundle_roots if root.lower().endswith(all_suffixes)), None)
+        if member is None and app_suffixes:
+            member = next((root for root in bundle_roots if root.lower().endswith(app_suffixes)), None)
         if member is None:
-            member = next((name for name in names if name.lower().endswith(suffixes + all_suffixes)), None)
+            member = next((name for name in names if name.lower().endswith(suffixes + bundle_suffixes)), None)
         if member:
             # AU/VST bundles are directories in these archives. Preserve files
             # beside the bundle (such as sampler data), while the bundle move
@@ -120,6 +124,8 @@ def archive_members(candidate):
         return (member, related, prefix, artifact_format) if member else None
     except Exception as error:
         print(f"warning: could not inspect {candidate['filename']}: {error}", file=sys.stderr)
+        if isinstance(error, subprocess.CalledProcessError) and error.stderr:
+            print(error.stderr.strip(), file=sys.stderr)
         return None
 
 def render(candidate, archive_fallback=None):
@@ -143,6 +149,8 @@ def render(candidate, archive_fallback=None):
         bundle, related, prefix, artifact_format = archive
         if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
+        elif bundle.lower().endswith(".app"):
+            install = f'  app "{bundle}"'
         else:
             if candidate.get("source") == "plugins4free" and artifact_format in {"AU", "VST"}:
                 name = f"{slug(display)}-{artifact_format.lower()}"

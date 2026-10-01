@@ -50,6 +50,21 @@ def candidate_for(path):
     return candidate
 
 
+def archive_fallback_from_cask(path):
+    source = path.read_text()
+    match = re.search(r'^  app "([^"]+\.app)"(?:\s*=>.*)?$', source, re.M | re.I)
+    if match:
+        return (match.group(1), [], ".", None)
+    match = re.search(r'^    move "([^"]+\.(?:component|vst3?|clap))",', source, re.M | re.I)
+    if match:
+        bundle = match.group(1)
+        return (bundle, [], str(Path(bundle).parent), None)
+    match = re.search(r'^  pkg "([^"]+)"$', source, re.M)
+    if match:
+        return (match.group(1), [], ".", None)
+    return None
+
+
 def main():
     if len(sys.argv) < 2:
         raise SystemExit("usage: regenerate_casks.py Casks/<discovered-cask>.rb [...]")
@@ -61,6 +76,8 @@ def main():
     for path in paths:
         candidate = candidate_for(path)
         archive = None if candidate["filename"].lower().endswith(".pkg") else archive_members(candidate)
+        if archive is None:
+            archive = archive_fallback_from_cask(path)
         candidate["archive_members"] = archive
         name, content = render(candidate, archive_fallback=archive)
         if not name or not content:
