@@ -41,13 +41,15 @@ jobs:
             pr_numbers=("$PR_NUMBER")
           else
             pr_numbers=()
-            open_prs="$(gh pr list --repo "$REPOSITORY" --state open --limit 100 \
+            open_prs="$(gh pr list --repo "$REPOSITORY" --state open --limit 100 --base main \
               --json number,author,headRefName,headRepository,labels)"
+            echo "Open PRs returned by gh: $(jq 'length' <<< "$open_prs")"
             while IFS= read -r number; do
               pr_numbers+=("$number")
             done < <(jq -r --arg bot "$BOT_LOGIN" --arg repo "$REPOSITORY" \
               '.[] | select(.author.login == $bot and (.headRefName | startswith("automation/discovered-plugins4free-")) and .headRepository.nameWithOwner == $repo and ([.labels[].name] | index("automation"))) | .number' \
               <<< "$open_prs")
+            echo "Matching Plugins4Free discovery PRs: ${#pr_numbers[@]} (author=$BOT_LOGIN, branch prefix=automation/discovered-plugins4free-, label=automation)"
           fi
 
           if ((${#pr_numbers[@]} == 0)); then

@@ -62,6 +62,13 @@ def archive_members(candidate):
                             entries.extend(((relative_root / file).as_posix(), False) for file in files if file != ".DS_Store")
                     finally:
                         subprocess.run(["hdiutil", "detach", str(mountpoint)], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        entries = [
+            (name, is_dir)
+            for name, is_dir in entries
+            if "__MACOSX" not in Path(name).parts
+            and Path(name).name != ".DS_Store"
+            and not Path(name).name.startswith("._")
+        ]
         names = [name for name, is_dir in entries if not is_dir]
         formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
         all_suffixes = (".component", ".vst", ".vst3", ".clap")
