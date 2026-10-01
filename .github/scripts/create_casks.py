@@ -98,8 +98,12 @@ end
             extension = "VST"
         if not re.search(r"\.(vst3?|component|clap)$", bundle, re.I):
             bundle += {"VST": ".vst", "VST3": ".vst3", "Components": ".component", "AU": ".component", "CLAP": ".clap"}.get(extension, "")
-        target = f"#{{Dir.home}}/Library/Audio/Plug-Ins/{extension}"
-        install_lines = [f'  artifact "{bundle}", target: "{target}"']
+        plugin_dir = f"#{{Dir.home}}/Library/Audio/Plug-Ins/{extension}"
+        # Homebrew artifact targets must identify the installed artifact path,
+        # not just the containing directory. Directory targets collide when a
+        # cask installs multiple artifacts of the same plugin format.
+        bundle_target = f"{plugin_dir}/{Path(bundle).name}"
+        install_lines = [f'  artifact "{bundle}", target: "{bundle_target}"']
         # Non-bundle files in the same archive directory may be required data
         # (e.g. Maize Sampler instrument folders). Install each with its path
         # preserved relative to the plugin destination.
@@ -107,7 +111,7 @@ end
             if member == bundle:
                 continue
             relative = member[len(prefix):] if prefix else member
-            install_lines.append(f'  artifact "{member}", target: "{target}/{relative}"')
+            install_lines.append(f'  artifact "{member}", target: "{plugin_dir}/{relative}"')
         install = "\n".join(install_lines)
     return name, f'''cask "{name}" do
   version "{candidate.get("version", "latest")}"
