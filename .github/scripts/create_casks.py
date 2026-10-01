@@ -14,6 +14,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CASKS = ROOT / "Casks"
+METADATA_DIRECTORIES = {"__MACOSX", ".fseventsd", ".Spotlight-V100", ".Trashes", ".TemporaryItems"}
+METADATA_FILES = {".DS_Store", ".VolumeIcon.icns"}
 
 def slug(value):
     value = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
@@ -22,6 +24,14 @@ def slug(value):
 def clean_name(value):
     value = re.sub(r"(?:[-_ ]+(?:vst3?|au|clap|lv2|plugin|plugins|audio|osx|macos|recompiled))+$", "", value, flags=re.I)
     return value.strip("-_ ")
+
+def is_metadata_path(name):
+    parts = Path(name).parts
+    return (
+        any(part in METADATA_DIRECTORIES for part in parts)
+        or parts[-1] in METADATA_FILES
+        or parts[-1].startswith("._")
+    )
 
 def existing():
     result = {path.stem for path in CASKS.glob("*.rb")}
@@ -57,18 +67,13 @@ def archive_members(candidate):
                     try:
                         entries = []
                         for root, directories, files in os.walk(mountpoint):
+                            directories[:] = [directory for directory in directories if directory not in METADATA_DIRECTORIES]
                             relative_root = Path(root).relative_to(mountpoint)
                             entries.extend(((relative_root / directory).as_posix(), True) for directory in directories)
-                            entries.extend(((relative_root / file).as_posix(), False) for file in files if file != ".DS_Store")
+                            entries.extend(((relative_root / file).as_posix(), False) for file in files)
                     finally:
                         subprocess.run(["hdiutil", "detach", str(mountpoint)], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        entries = [
-            (name, is_dir)
-            for name, is_dir in entries
-            if "__MACOSX" not in Path(name).parts
-            and Path(name).name != ".DS_Store"
-            and not Path(name).name.startswith("._")
-        ]
+        entries = [(name, is_dir) for name, is_dir in entries if not is_metadata_path(name)]
         names = [name for name, is_dir in entries if not is_dir]
         formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
         all_suffixes = (".component", ".vst", ".vst3", ".clap")
