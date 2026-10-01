@@ -8,6 +8,6 @@ cask "gabcis-acoustic-cloak" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "Acoustic Cloak.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Acoustic Cloak.vst3"
+    copy "Acoustic Cloak.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Acoustic Cloak.vst3", recursive: true
   end
 end
