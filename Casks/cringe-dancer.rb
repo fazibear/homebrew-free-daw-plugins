@@ -6,5 +6,6 @@ cask "cringe-dancer" do
   desc "Free audio plugin"
   homepage "https://github.com/alexlarichev/cringe-dancer-releases"
   depends_on :macos
-  dmg "CringeDancer-1.0.0-mac.dmg"
+  container type: :dmg
+  pkg "Install Cringe Dancer.pkg"
 end
