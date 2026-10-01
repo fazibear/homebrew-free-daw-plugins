@@ -6,5 +6,8 @@ cask "vsco2-clarinet-au" do
   desc "VSCO2 Clarinet is a sampled clarinet ."
   homepage "https://plugins4free.com/plugin/2720"
   depends_on :macos
-  artifact "VSCO2 Clarinet.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "VSCO2 Clarinet.component", "{{user}}/Library/Audio/Plug-Ins/Components/VSCO2 Clarinet.component"
+  end
 end
