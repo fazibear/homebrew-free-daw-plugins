@@ -1,0 +1,67 @@
+name: Regenerate Plugins4Free cask PR
+run-name: Regenerate Plugins4Free PR #${{ inputs.pr_number }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Existing Plugins4Free discovery PR number"
+        required: true
+        type: number
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  regenerate:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.CASK_BOT_TOKEN }}
+      - name: Check out and validate the existing discovery PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          BOT_LOGIN: ${{ secrets.CASK_BOT_LOGIN }}
+        run: |
+          set -euo pipefail
+          metadata="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json author,headRefName,headRepository,labels)"
+          head_ref="$(jq -r '.headRefName' <<< "$metadata")"
+          head_repo="$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")"
+          author="$(jq -r '.author.login' <<< "$metadata")"
+          has_label="$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")"
+          [[ "$head_ref" == automation/discovered-plugins4free-* ]]
+          [[ "$head_repo" == "$REPOSITORY" ]]
+          [[ "$author" == "$BOT_LOGIN" ]]
+          [[ "$has_label" == true ]]
+          gh pr checkout "$PR_NUMBER" --repo "$REPOSITORY"
+          echo "head_ref=$head_ref" >> "$GITHUB_OUTPUT"
+      - name: Regenerate casks with the current generator
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
+        run: |
+          set -euo pipefail
+          base_sha="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json baseRefOid --jq .baseRefOid)"
+          head_sha="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json headRefOid --jq .headRefOid)"
+          files=()
+          while IFS= read -r file; do files+=("$file"); done < <(git diff --diff-filter=AM --name-only "$base_sha" "$head_sha" -- 'Casks/*.rb')
+          ((${#files[@]} > 0))
+          python3 .github/scripts/regenerate_casks.py "${files[@]}"
+          for file in "${files[@]}"; do ruby -c "$file"; done
+          if git diff --quiet -- "${files[@]}"; then
+            echo "Generated casks already match the current generator"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "${files[@]}"
+          git commit -m "Regenerate Plugins4Free casks"
+          git push origin "HEAD:$HEAD_REF"
