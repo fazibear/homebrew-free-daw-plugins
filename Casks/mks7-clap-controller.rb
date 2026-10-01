@@ -8,6 +8,6 @@ cask "mks7-clap-controller" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
-    move "MKS-7 Controller.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/MKS-7 Controller.clap"
+    copy "MKS-7 Controller.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/MKS-7 Controller.clap", recursive: true
   end
 end
