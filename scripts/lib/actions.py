@@ -56,11 +56,10 @@ def _open_pr(branch):
     return prs[0]["number"] if prs else None
 
 
-def publish_discovery(source):
+def publish_discovery(source, paths):
     configure_git()
     repo = repo_env()
     token = os.environ.get("GH_TOKEN")
-    paths = _new_casks()
     groups = {}
     if source == "plugins4free":
         for path in paths:
@@ -117,8 +116,26 @@ def publish_discovery(source):
 
 
 def run_discovery_action(source):
-    discover(source)
-    publish_discovery(source)
+    if source == "github":
+        from .github import iter_candidates
+        candidate_groups = ([candidate] for candidate in iter_candidates())
+    elif source == "plugins4free":
+        from .plugins4free import iter_groups
+        candidate_groups = iter_groups()
+    elif source == "bpb":
+        from .bpb import iter_groups
+        candidate_groups = iter_groups()
+    else:
+        raise ValueError(f"unknown discovery source: {source}")
+
+    for candidates in candidate_groups:
+        before = set(_new_casks())
+        create_casks(candidates)
+        created = sorted(set(_new_casks()) - before)
+        if created:
+            tokens = ", ".join(path.stem for path in created)
+            print(f"Publishing {source} candidate cask(s): {tokens}")
+            publish_discovery(source, created)
 
 
 def update_action():

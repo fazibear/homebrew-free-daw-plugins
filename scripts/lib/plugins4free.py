@@ -125,7 +125,7 @@ def candidates_from_plugin_page(url, fallback_title=""):
     return candidates
 
 
-def discover():
+def iter_groups():
     print(f"Plugins4Free: fetching directory {DIRECTORY}", file=sys.stderr)
     with http_request(DIRECTORY, user_agent="Mozilla/5.0 (free-daw-cask-discovery)", timeout=30) as response:
         html = response.read(2_000_000).decode("utf-8", "ignore")
@@ -135,7 +135,7 @@ def discover():
     except json.JSONDecodeError:
         pass
     pages = 0
-    candidates = []
+    candidate_count = 0
     for match in re.finditer(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html, re.I | re.S):
         url = urllib.parse.urljoin(DIRECTORY, match.group(1))
         title = re.sub(r"<[^>]+>", "", match.group(2)).strip()
@@ -144,10 +144,17 @@ def discover():
             continue
         pages += 1
         try:
-            candidates.extend(candidates_from_plugin_page(url, title))
+            candidates = candidates_from_plugin_page(url, title)
+            if candidates:
+                candidate_count += len(candidates)
+                yield candidates
         except Exception:
             continue
-    print(f"Plugins4Free: parsed {pages} plugin pages and found {len(candidates)} macOS download candidates", file=sys.stderr)
+    print(f"Plugins4Free: parsed {pages} plugin pages and found {candidate_count} macOS download candidates", file=sys.stderr)
+
+
+def discover():
+    candidates = [candidate for group in iter_groups() for candidate in group]
     return candidates
 
 

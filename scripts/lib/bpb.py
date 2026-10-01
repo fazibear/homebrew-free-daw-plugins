@@ -230,11 +230,11 @@ def product_name(download, page):
     return name.strip()
 
 
-def cask_candidates(links):
+def iter_candidate_groups(links):
     existing_tokens, existing_homepages = existing_casks()
-    results = []
     seen_tokens = set()
     skipped_existing = set()
+    verified = 0
     for link in links:
         page = link["url"]
         try:
@@ -242,6 +242,7 @@ def cask_candidates(links):
         except Exception as error:
             print(f"BPB: skipping {page}: {error}", file=sys.stderr)
             continue
+        results = []
         for download in downloads:
             name = product_name(download, page)
             if not name:
@@ -269,25 +270,31 @@ def cask_candidates(links):
                 candidate["format"] = format_name
             results.append(candidate)
             seen_tokens.add(token)
+            verified += 1
+        if results:
+            yield results
     print(
         f"BPB: skipped {len(skipped_existing)} existing plugin(s); "
-        f"verified {len(results)} new macOS installer candidate(s)",
+        f"verified {verified} new macOS installer candidate(s)",
         file=sys.stderr,
     )
-    return results
 
 
-def discover():
+def iter_groups():
     try:
         thread = current_thread()
         comments = approved_comments(thread)
         links = candidates_from_comments(thread, comments)
-        candidates = cask_candidates(links)
+        groups = iter_candidate_groups(links)
     except Exception as error:
         print(f"BPB: {error}", file=sys.stderr)
         raise SystemExit(1)
     print(f"BPB: checked {len(comments)} approved comment(s) in {thread}", file=sys.stderr)
-    return candidates
+    yield from groups
+
+
+def discover():
+    return [candidate for group in iter_groups() for candidate in group]
 
 
 def main():

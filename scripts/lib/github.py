@@ -31,7 +31,7 @@ def candidate_from_repository(repo):
     }
 
 
-def discover():
+def iter_candidates():
     repositories = {}
     for query in ("topic:audio-plugin macos", "topic:vst3 macos", "topic:clap-plugin macos"):
         print(f"GitHub: searching {query}", file=sys.stderr)
@@ -45,12 +45,15 @@ def discover():
         for repo in github_json(f"https://api.github.com/search/repositories?{params}").get("items", []):
             repositories[repo["full_name"]] = repo
     print(f"GitHub: found {len(repositories)} unique repositories", file=sys.stderr)
-    candidates = []
     for repo in repositories.values():
         candidate = candidate_from_repository(repo)
         if candidate:
-            candidates.append(candidate)
-    print(f"GitHub: found {len(repositories)} repositories and {len(candidates)} macOS release candidates", file=sys.stderr)
+            yield candidate
+
+
+def discover():
+    candidates = list(iter_candidates())
+    print(f"GitHub: found {len(candidates)} macOS release candidates", file=sys.stderr)
     return candidates
 
 
