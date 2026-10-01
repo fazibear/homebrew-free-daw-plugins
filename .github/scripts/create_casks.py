@@ -110,7 +110,7 @@ def archive_members(candidate):
         print(f"warning: could not inspect {candidate['filename']}: {error}", file=sys.stderr)
         return None
 
-def render(candidate):
+def render(candidate, archive_fallback=None):
     display = clean_name(candidate["name"])
     name = slug(display)
     if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
@@ -121,7 +121,11 @@ def render(candidate):
     if filename.lower().endswith(".pkg"):
         install = f'  pkg "{filename}"'
     else:
-        archive = archive_members(candidate)
+        archive = candidate.get("archive_members")
+        if archive is None and "archive_members" not in candidate:
+            archive = archive_members(candidate)
+        if not archive:
+            archive = archive_fallback
         if not archive:
             return None, None
         bundle, related, prefix, artifact_format = archive

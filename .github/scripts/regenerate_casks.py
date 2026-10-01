@@ -4,8 +4,9 @@ import re
 import sys
 import urllib.parse
 from pathlib import Path
+from pathlib import PurePosixPath
 
-from create_casks import render
+from create_casks import archive_members, render
 
 
 def stanza(source, name):
@@ -52,6 +53,20 @@ def candidate_for(path):
     }
 
 
+def archive_fallback_from_cask(path, source):
+    """Reuse the existing install target if a remote archive cannot be inspected."""
+    bundle_match = re.search(r'^    move "([^"]+\.(?:component|vst3?|clap))",', source, re.M | re.I)
+    if bundle_match:
+        bundle = bundle_match.group(1)
+        return (bundle, [], str(PurePosixPath(bundle).parent), None)
+
+    pkg_match = re.search(r'^  pkg "([^"]+)"$', source, re.M)
+    if pkg_match:
+        return (pkg_match.group(1), [], ".", None)
+
+    raise ValueError(f"{path}: archive is unavailable and existing cask has no recognizable install target")
+
+
 def main():
     if len(sys.argv) < 2:
         raise SystemExit("usage: regenerate_casks.py Casks/<plugin>-au.rb [...]")
@@ -61,8 +76,16 @@ def main():
     regenerated = {}
     obsolete_paths = set()
     for path in paths:
+        source = path.read_text()
         candidate = candidate_for(path)
-        name, content = render(candidate)
+        archive = None
+        if not candidate["filename"].lower().endswith(".pkg"):
+            archive = archive_members(candidate)
+            if archive is None:
+                archive = archive_fallback_from_cask(path, source)
+        name, content = render(candidate, archive_fallback=archive)
+        if not name or not content:
+            name, content = render(candidate, archive_fallback_from_cask(path, source))
         if not name or not content:
             raise ValueError(f"{path}: current generator could not reproduce this cask")
         target = path.with_name(f"{name}.rb")

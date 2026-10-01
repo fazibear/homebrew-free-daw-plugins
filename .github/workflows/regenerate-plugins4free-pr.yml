@@ -57,6 +57,8 @@ jobs:
 
           regenerate_one() {
             local pr_number="$1"
+            local position="$2"
+            local total="$3"
             local metadata head_ref base_ref head_repo author has_label original_head
             local files=()
 
@@ -71,7 +73,7 @@ jobs:
             [[ "$author" == "$BOT_LOGIN" ]] || return 1
             [[ "$has_label" == true ]] || return 1
 
-            echo "Regenerating PR #$pr_number ($head_ref)"
+            echo "Regenerating PR #$pr_number ($position/$total) ($head_ref)"
             gh pr checkout "$pr_number" --repo "$REPOSITORY" || return 1
             original_head="$(git rev-parse HEAD)" || return 1
             git fetch origin "$base_ref" || return 1
@@ -102,8 +104,11 @@ jobs:
           }
 
           failed_prs=()
-          for pr_number in "${pr_numbers[@]}"; do
-            if ! regenerate_one "$pr_number"; then
+          total_prs=${#pr_numbers[@]}
+          for index in "${!pr_numbers[@]}"; do
+            pr_number="${pr_numbers[$index]}"
+            position=$((index + 1))
+            if ! regenerate_one "$pr_number" "$position" "$total_prs"; then
               echo "Failed to regenerate PR #$pr_number; continuing with the next PR"
               failed_prs+=("$pr_number")
               git rebase --abort 2>/dev/null || true
