@@ -6,8 +6,5 @@ cask "gabcis-acoustic-cloak" do
   desc "Free audio plugin"
   homepage "https://github.com/rcptr2/gabcis-acoustic-cloak"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "Acoustic Cloak.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Acoustic Cloak.vst3", recursive: true
-  end
+  artifact "Acoustic Cloak.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/Acoustic Cloak.vst3"
 end
