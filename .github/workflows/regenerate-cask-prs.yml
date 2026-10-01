@@ -25,8 +25,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/cask-regenerator"
-          cp .github/scripts/create_casks.py .github/scripts/regenerate_casks.py \
-            .github/scripts/github_plugins.py .github/scripts/plugins4free_plugins.py \
+          cp scripts/create_casks.py scripts/regenerate_casks.py \
+            scripts/github_plugins.py scripts/plugins4free_plugins.py scripts/cask_utils.py \
             "$RUNNER_TEMP/cask-regenerator/"
       - name: Rebase and regenerate open discovery PRs
         env:

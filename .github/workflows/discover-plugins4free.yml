@@ -20,7 +20,7 @@ jobs:
       - name: Parse Plugins4Free instruments directory and create casks
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 .github/scripts/plugins4free_plugins.py | python3 .github/scripts/create_casks.py
+        run: python3 scripts/plugins4free_plugins.py | python3 scripts/create_casks.py
       - name: Open one pull request per cask
         env:
           GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}

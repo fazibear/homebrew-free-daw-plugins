@@ -2,25 +2,18 @@
 """Regenerate discovery casks from current source data with the shared renderer."""
 import re
 import sys
-import urllib.parse
 from pathlib import Path
 
+from cask_utils import github_repository, stanza
 from create_casks import archive_members, render
 from github_plugins import candidate_from_repository
 from plugins4free_plugins import candidates_from_plugin_page
 
 
-def stanza(source, name):
-    match = re.search(rf'^  {re.escape(name)} "([^"]*)"$', source, re.M)
-    if not match:
-        raise ValueError(f"missing {name} stanza")
-    return match.group(1)
-
-
 def candidate_for(path):
     source = path.read_text()
     token = path.stem
-    homepage = stanza(source, "homepage")
+    homepage = stanza(source, "homepage", required=True)
 
     if re.fullmatch(r"https://(?:www\.)?plugins4free\.com/plugin/[A-Za-z0-9_-]+/?", homepage):
         if token.endswith("-au"):
@@ -33,10 +26,8 @@ def candidate_for(path):
         candidate = next((item for item in candidates if item.get("format") == plugin_format), None)
         if candidate is None:
             raise ValueError(f"{path}: Plugins4Free page has no current {plugin_format} download")
-    elif urllib.parse.urlparse(homepage).netloc.lower() == "github.com":
-        parts = [part for part in urllib.parse.urlparse(homepage).path.split("/") if part]
-        if len(parts) < 2:
-            raise ValueError(f"{path}: could not determine GitHub repository from homepage")
+    elif (repository := github_repository(homepage)):
+        parts = repository.split("/")
         repo = {"full_name": "/".join(parts[:2]), "name": parts[1]}
         candidate = candidate_from_repository(repo)
         if candidate is None:
@@ -44,8 +35,8 @@ def candidate_for(path):
     else:
         raise ValueError(f"{path}: unsupported discovery source homepage: {homepage}")
 
-    candidate["name"] = stanza(source, "name")
-    candidate["description"] = stanza(source, "desc")
+    candidate["name"] = stanza(source, "name", required=True)
+    candidate["description"] = stanza(source, "desc", required=True)
     candidate["homepage"] = homepage
     return candidate
 
@@ -55,7 +46,7 @@ def archive_fallback_from_cask(path):
     match = re.search(r'^  app "([^"]+\.app)"(?:\s*=>.*)?$', source, re.M | re.I)
     if match:
         return (match.group(1), [], ".", None)
-    match = re.search(r'^    move "([^"]+\.(?:component|vst3?|clap))",', source, re.M | re.I)
+    match = re.search(r'^    move "([^"]+\.(?:component|vst3?|clap|lv2))",', source, re.M | re.I)
     if match:
         bundle = match.group(1)
         return (bundle, [], str(Path(bundle).parent), None)

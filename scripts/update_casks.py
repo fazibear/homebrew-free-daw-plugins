@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 """Update versioned GitHub casks from their repositories' latest releases."""
 import hashlib
-import json
-import os
 import re
 import sys
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from cask_utils import github_json, github_repository, stanza
 from create_casks import render
-
-
-def stanza(source, name):
-    match = re.search(rf'^  {re.escape(name)} "([^"]*)"$', source, re.M)
-    return match.group(1) if match else None
 
 
 def version_numbers(value):
@@ -38,27 +32,6 @@ def newer_version(current, latest):
     if old_core != new_core:
         return old_core < new_core
     return old_prerelease is not None and new_prerelease is None
-
-
-def github_repository(homepage):
-    parsed = urllib.parse.urlparse(homepage)
-    if parsed.netloc.lower() != "github.com":
-        return None
-    parts = [part for part in parsed.path.split("/") if part]
-    return "/".join(parts[:2]) if len(parts) >= 2 else None
-
-
-def get_json(url):
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "free-daw-cask-updater",
-    }
-    token = os.environ.get("GITHUB_TOKEN")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.load(response)
 
 
 def sha256(url):
@@ -97,7 +70,7 @@ def update(path):
     if not repository or "github.com/" not in (old_url or ""):
         return "skip", "no GitHub release download source"
 
-    release = get_json(f"https://api.github.com/repos/{repository}/releases/latest")
+    release = github_json(f"https://api.github.com/repos/{repository}/releases/latest")
     latest = re.sub(r"^v", "", release.get("tag_name") or "", flags=re.I)
     if not latest:
         return "skip", "GitHub returned no latest release tag"

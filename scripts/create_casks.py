@@ -7,15 +7,31 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 CASKS = ROOT / "Casks"
 METADATA_DIRECTORIES = {"__MACOSX", ".fseventsd", ".Spotlight-V100", ".Trashes", ".TemporaryItems"}
 METADATA_FILES = {".DS_Store", ".VolumeIcon.icns"}
+PLUGIN_DIRS = {
+    ".component": "Components",
+    ".vst": "VST",
+    ".vst3": "VST3",
+    ".clap": "CLAP",
+    ".lv2": "LV2",
+}
+PLUGIN_SUFFIXES_BY_FORMAT = {
+    "AU": (".component",),
+    "VST": (".vst",),
+    "VST3": (".vst3",),
+    "CLAP": (".clap",),
+}
+RESOURCE_FORMATS = {
+    "au": "Components", "components": "Components", "component": "Components",
+    "vst": "VST", "vst3": "VST3", "clap": "CLAP", "lv2": "LV2",
+}
 
 def slug(value):
     value = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
@@ -75,11 +91,10 @@ def archive_members(candidate, *, strict=False):
                         subprocess.run(["hdiutil", "detach", str(mountpoint)], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         entries = [(name, is_dir) for name, is_dir in entries if not is_metadata_path(name)]
         names = [name for name, is_dir in entries if not is_dir]
-        formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
-        all_suffixes = (".component", ".vst", ".vst3", ".clap", ".lv2")
+        all_suffixes = tuple(PLUGIN_DIRS)
         app_suffixes = () if candidate.get("source") == "plugins4free" else (".app",)
         bundle_suffixes = all_suffixes + app_suffixes
-        suffixes = formats.get(candidate.get("format"), all_suffixes)
+        suffixes = PLUGIN_SUFFIXES_BY_FORMAT.get(candidate.get("format"), all_suffixes)
         bundle_roots = []
         for name, is_dir in entries:
             if name.lower().endswith(".pkg"):
@@ -165,13 +180,12 @@ def render(candidate, archive_fallback=None):
         if not archive:
             return None, None
         if isinstance(archive, tuple):
-            bundle, related, prefix, artifact_format = archive
+            bundle, related, prefix, _ = archive
             bundles = [bundle]
         else:
             bundles = archive.get("bundles", [])
             related = archive.get("related", [])
             prefix = "."
-            artifact_format = None
             bundle = bundles[0] if bundles else ""
         if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
@@ -182,10 +196,6 @@ def render(candidate, archive_fallback=None):
         else:
             if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
                 name = f"{slug(display)}-{candidate['format'].lower()}"
-            suffix_formats = {
-                ".vst3": "VST3", ".vst": "VST", ".component": "Components",
-                ".clap": "CLAP", ".lv2": "LV2",
-            }
             if not bundles:
                 extension = candidate.get("format", "VST3")
                 suffix = {"AU": ".component", "VST": ".vst"}.get(extension, f".{extension.lower()}")
@@ -193,7 +203,7 @@ def render(candidate, archive_fallback=None):
             install = "  postflight_steps do\n"
             for plugin_bundle in bundles:
                 plugin_extension = Path(plugin_bundle).suffix.lower()
-                extension = suffix_formats.get(plugin_extension, candidate.get("format", "VST3"))
+                extension = PLUGIN_DIRS.get(plugin_extension, candidate.get("format", "VST3"))
                 plugin_dir = f"Library/Audio/Plug-Ins/{extension}"
                 bundle_target = f"{plugin_dir}/{Path(plugin_bundle).name}"
                 install += f'    mkdir_p "{{{{user}}}}/{plugin_dir}"\n'
@@ -201,26 +211,22 @@ def render(candidate, archive_fallback=None):
 
             # Preserve loose supporting files, while leaving files inside
             # recognized plugin bundles with their owning bundle.
-            resource_formats = {
-                "au": "Components", "components": "Components", "component": "Components",
-                "vst": "VST", "vst3": "VST3", "clap": "CLAP", "lv2": "LV2",
-            }
             candidate_format = (candidate.get("format") or "VST3").lower()
-            default_resource_format = resource_formats.get(candidate_format, "VST3")
+            default_resource_format = RESOURCE_FORMATS.get(candidate_format, "VST3")
             for member in related:
                 relative = member[len(prefix):] if prefix != "." and member.startswith(prefix) else member
                 relative_parts = Path(relative).parts
                 format_index = next(
-                    (index for index, part in enumerate(relative_parts) if part.lower() in resource_formats),
+                    (index for index, part in enumerate(relative_parts) if part.lower() in RESOURCE_FORMATS),
                     None,
                 )
-                resource_format = resource_formats.get(relative_parts[format_index].lower()) if format_index is not None else None
+                resource_format = RESOURCE_FORMATS.get(relative_parts[format_index].lower()) if format_index is not None else None
                 if format_index is not None:
                     relative = Path(*relative_parts[format_index + 1:]).as_posix()
                     if relative == ".":
                         relative = Path(relative_parts[format_index]).name
                 if resource_format is None and len(bundles) == 1:
-                    resource_format = suffix_formats.get(Path(bundles[0]).suffix.lower(), default_resource_format)
+                    resource_format = PLUGIN_DIRS.get(Path(bundles[0]).suffix.lower(), default_resource_format)
                 if resource_format is None:
                     resource_format = "Resources"
                 resource_dir = f"Library/Audio/Plug-Ins/{resource_format}"
