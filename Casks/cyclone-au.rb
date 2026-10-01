@@ -6,5 +6,6 @@ cask "cyclone-au" do
   desc "Cyclone is a true low-level hardware emulator of the 12-bit Yamaha TX16W sampler ."
   homepage "https://plugins4free.com/plugin/1838"
   depends_on :macos
-  dmg "SonicCharge-Cyclone_1.0.dmg"
+  container type: :dmg
+  pkg "Sonic Charge Cyclone.pkg"
 end
