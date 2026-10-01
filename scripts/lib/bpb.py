@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections import Counter
 from pathlib import Path
 import urllib.parse
 import urllib.request
@@ -79,7 +80,7 @@ def fetch(url):
                 + (f" ({details})" if details else "")
             )
         if envelope.get("error"):
-            raise RuntimeError(f"Lightpanda could not fetch {url}: {envelope['error']}")
+            raise RuntimeError(f"Lightpanda could not fetch {url} - {envelope['error']}")
         response = envelope.get("content", "")
         parser = PreParser()
         parser.feed(response)
@@ -198,16 +199,23 @@ def approved_comments(thread_url):
 def candidates_from_comments(thread_url, comments):
     results = []
     seen = set()
+    counts = Counter()
     for comment in comments:
         content = html.unescape(comment.get("content", {}).get("rendered", ""))
         parser = AnchorParser()
         parser.feed(content)
+        counts["comments_with_links"] += bool(parser.links)
         plain_text = re.sub(r"<[^>]+>", " ", content)
         plain_text = re.sub(r"\s+", " ", html.unescape(plain_text)).strip()
         for raw_url, title in parser.links:
+            counts["links"] += 1
             target = urllib.parse.urljoin(thread_url, html.unescape(raw_url))
             host = (urllib.parse.urlparse(target).hostname or "").lower()
-            if not host or host == "bedroomproducersblog.com" or target in seen:
+            if not host or host == "bedroomproducersblog.com":
+                counts["internal_or_invalid"] += 1
+                continue
+            if target in seen:
+                counts["duplicates"] += 1
                 continue
             seen.add(target)
             results.append({
@@ -219,6 +227,12 @@ def candidates_from_comments(thread_url, comments):
                 "source": "bpb-freebies",
                 "review_required": True,
             })
+    print(
+        f"BPB: comment links: {counts['comments_with_links']}/{len(comments)} comments contain links; "
+        f"{counts['links']} links total; {counts['internal_or_invalid']} internal/invalid; "
+        f"{counts['duplicates']} repeated; {len(results)} unique external pages to check",
+        file=sys.stderr,
+    )
     return results
 
 
@@ -274,18 +288,26 @@ def iter_candidate_groups(links):
     seen_tokens = set()
     skipped_existing = set()
     verified = 0
-    for link in links:
+    counts = Counter()
+    for index, link in enumerate(links, 1):
         page = link["url"]
+        print(f"BPB: checking page {index}/{len(links)}: {page}", file=sys.stderr)
         try:
             downloads = find_downloads(page)
         except Exception as error:
-            print(f"BPB: skipping {page}: {error}", file=sys.stderr)
+            counts["failed_pages"] += 1
+            print(f"BPB: skipping {page} - {error}", file=sys.stderr)
             continue
+        print(f"BPB: {page} - found {len(downloads)} verified macOS archive(s)", file=sys.stderr)
+        if not downloads:
+            counts["no_downloads"] += 1
+            print(f"BPB: skipping {page} - no verified direct macOS archives", file=sys.stderr)
         results = []
         for download in downloads:
             name = product_name(download, page)
             if not name:
-                print(f"BPB: skipping {page}: product page has no title", file=sys.stderr)
+                counts["missing_title"] += 1
+                print(f"BPB: skipping {page} - product page has no title", file=sys.stderr)
                 continue
             format_name = plugin_format(download)
             token = slug(clean_name(name))
@@ -293,8 +315,13 @@ def iter_candidate_groups(links):
                 token = f"{token}-{format_name.lower()}"
             if token in existing_tokens or normalized_url(page) in existing_homepages:
                 skipped_existing.add(page)
+                counts["existing"] += 1
+                reason = "cask token already exists" if token in existing_tokens else "homepage already has a cask"
+                print(f"BPB: skipping {token} from {page} - {reason}", file=sys.stderr)
                 continue
             if token in seen_tokens:
+                counts["duplicates"] += 1
+                print(f"BPB: skipping {token} from {page} - duplicate candidate in this run", file=sys.stderr)
                 continue
             candidate = {
                 "name": name,
@@ -310,11 +337,18 @@ def iter_candidate_groups(links):
             results.append(candidate)
             seen_tokens.add(token)
             verified += 1
+            print(f"BPB: candidate {token}: {download['filename']} ({format_name or 'combined/unknown format'})", file=sys.stderr)
         if results:
+            counts["groups"] += 1
+            print(f"BPB: {page} - sending {len(results)} candidate(s) to cask generation", file=sys.stderr)
             yield results
     print(
-        f"BPB: skipped {len(skipped_existing)} existing plugin(s); "
-        f"verified {verified} new macOS installer candidate(s)",
+        f"BPB: page summary: {len(links)} checked; {counts['failed_pages']} failed; "
+        f"{counts['no_downloads']} without verified macOS archives; "
+        f"{len(skipped_existing)} pages matched existing casks. "
+        f"Candidate summary: {counts['existing']} existing; {counts['duplicates']} duplicate; "
+        f"{counts['missing_title']} without titles; {verified} new installer candidates "
+        f"across {counts['groups']} product group(s)",
         file=sys.stderr,
     )
 
