@@ -8,6 +8,6 @@ cask "easymeter" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "EasyMeter.component", "{{user}}/Library/Audio/Plug-Ins/Components/EasyMeter.component"
+    copy "EasyMeter.component", "{{user}}/Library/Audio/Plug-Ins/Components/EasyMeter.component", recursive: true
   end
 end
