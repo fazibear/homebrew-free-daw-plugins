@@ -68,12 +68,12 @@ def main():
         try:
             downloads = find_downloads(page)
         except Exception as error:
-            print(f"BPB: skipping {page}: {error}", file=sys.stderr)
+            print(f"BPB: skipping {page} - {error}", file=sys.stderr)
             continue
         for download in downloads:
             product_name = download.get("product_name")
             if not product_name:
-                print(f"BPB: skipping {page}: product page has no title", file=sys.stderr)
+                print(f"BPB: skipping {page} - product page has no title", file=sys.stderr)
                 continue
             candidate = {
                 "name": product_name,
