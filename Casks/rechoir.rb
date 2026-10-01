@@ -6,12 +6,7 @@ cask "rechoir" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/rechoir"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    copy "VST/Rechoir.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Rechoir.vst", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "VST3/Rechoir.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Rechoir.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "AU/Rechoir AUV3.app", "{{user}}/Applications/Rechoir AUV3.app", recursive: true
-  end
+  artifact "VST/Rechoir.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Rechoir.vst"
+  artifact "VST3/Rechoir.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/Rechoir.vst3"
+  app "AU/Rechoir AUV3.app", target: "#{Dir.home}/Applications/Rechoir AUV3.app"
 end
