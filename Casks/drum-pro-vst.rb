@@ -6,5 +6,8 @@ cask "drum-pro-vst" do
   desc "Drum Pro is a drum kit rompler including some sampled vintage units."
   homepage "https://plugins4free.com/plugin/2225"
   depends_on :macos
-  artifact "Drum Pro Mac VST/DRUM PRO.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Drum Pro Mac VST/DRUM PRO.vst", "{{user}}/Library/Audio/Plug-Ins/VST/DRUM PRO.vst"
+  end
 end
