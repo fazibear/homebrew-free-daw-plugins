@@ -6,10 +6,6 @@ cask "upmixer" do
   desc "Free audio plugin"
   homepage "https://github.com/qutschwalze/Upmixer"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "Upmixer.component", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "Upmixer.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Upmixer.vst3", recursive: true
-  end
+  artifact "Upmixer.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Upmixer.component"
+  artifact "Upmixer.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/Upmixer.vst3"
 end
