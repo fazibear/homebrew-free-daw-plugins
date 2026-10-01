@@ -8,8 +8,8 @@ cask "deepfilternet3" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
-    move "DeepFilterNR-v0.7.0-macos-arm64/Plugins/deepfilter-vst.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/deepfilter-vst.clap"
+    copy "DeepFilterNR-v0.7.0-macos-arm64/Plugins/deepfilter-vst.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/deepfilter-vst.clap", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "DeepFilterNR-v0.7.0-macos-arm64/Plugins/deepfilter-vst.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/deepfilter-vst.vst3"
+    copy "DeepFilterNR-v0.7.0-macos-arm64/Plugins/deepfilter-vst.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/deepfilter-vst.vst3", recursive: true
   end
 end
