@@ -6,5 +6,8 @@ cask "sonatina-bassoon-au" do
   desc "Sonatina Bassoon is a sampled bassoon ."
   homepage "https://plugins4free.com/plugin/2309"
   depends_on :macos
-  artifact "Sonatina Bassoon.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Sonatina Bassoon.component", "{{user}}/Library/Audio/Plug-Ins/Components/Sonatina Bassoon.component"
+  end
 end
