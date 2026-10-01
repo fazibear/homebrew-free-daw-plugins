@@ -76,7 +76,7 @@ def archive_members(candidate, *, strict=False):
         entries = [(name, is_dir) for name, is_dir in entries if not is_metadata_path(name)]
         names = [name for name, is_dir in entries if not is_dir]
         formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
-        all_suffixes = (".component", ".vst", ".vst3", ".clap")
+        all_suffixes = (".component", ".vst", ".vst3", ".clap", ".lv2")
         app_suffixes = () if candidate.get("source") == "plugins4free" else (".app",)
         bundle_suffixes = all_suffixes + app_suffixes
         suffixes = formats.get(candidate.get("format"), all_suffixes)
@@ -101,27 +101,31 @@ def archive_members(candidate, *, strict=False):
         if member is None and app_suffixes:
             member = next((root for root in bundle_roots if root.lower().endswith(app_suffixes)), None)
         if member is None:
-            member = next((name for name in names if name.lower().endswith(suffixes + bundle_suffixes)), None)
-        if member:
-            # AU/VST bundles are directories in these archives. Preserve files
-            # beside the bundle (such as sampler data), while the bundle move
-            # itself carries all files stored inside the bundle directory.
-            parent = str(Path(member).parent)
-            prefix = f"{parent}/" if parent != "." else ""
-            related = [
-                name for name in names
-                if name != member
-                and (name.startswith(prefix) if prefix else True)
-                and not name.startswith(f"{member}/")
-            ]
-            artifact_format = {
-                ".component": "AU", ".vst": "VST", ".vst3": "VST3", ".clap": "CLAP",
-            }.get(Path(member).suffix.lower(), candidate.get("format"))
-            print(f"Cask generator: {candidate['filename']} contains {member} ({artifact_format}) and {len(related)} sibling file(s)", file=sys.stderr)
-        else:
             print(f"Cask generator: no {candidate.get('format', 'plugin')} bundle found in {candidate['filename']}", file=sys.stderr)
-            artifact_format = None
-        return (member, related, prefix, artifact_format) if member else None
+            return None
+
+        if member.lower().endswith((".pkg", ".app")):
+            return (member, [], str(Path(member).parent), None)
+
+        # Keep every plugin bundle as a separate artifact. Treating files from
+        # sibling bundles as resources for the first match installs AU/VST3/LV2
+        # contents into the wrong plugin directory.
+        bundle_paths = [
+            root for root in bundle_roots
+            if root.lower().endswith(all_suffixes)
+            and (candidate.get("source") != "plugins4free" or root.lower().endswith(suffixes))
+        ]
+        bundle_paths = list(dict.fromkeys(bundle_paths))
+        related = [
+            name for name in names
+            if not any(name == root or name.startswith(f"{root}/") for root in bundle_paths)
+        ]
+        print(
+            f"Cask generator: {candidate['filename']} contains {len(bundle_paths)} plugin bundle(s): "
+            f"{', '.join(bundle_paths)}; {len(related)} sibling file(s)",
+            file=sys.stderr,
+        )
+        return {"bundles": bundle_paths, "related": related}
     except Exception as error:
         message = f"could not inspect {candidate['filename']}: {error}"
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:
@@ -151,7 +155,15 @@ def render(candidate, archive_fallback=None):
             archive = (filename, [], ".", None)
         if not archive:
             return None, None
-        bundle, related, prefix, artifact_format = archive
+        if isinstance(archive, tuple):
+            bundle, related, prefix, artifact_format = archive
+            bundles = [bundle]
+        else:
+            bundles = archive.get("bundles", [])
+            related = archive.get("related", [])
+            prefix = "."
+            artifact_format = None
+            bundle = bundles[0] if bundles else ""
         if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
         elif bundle.lower().endswith(".app"):
@@ -159,28 +171,51 @@ def render(candidate, archive_fallback=None):
         elif bundle.lower().endswith(".dmg"):
             install = f'  dmg "{bundle}"'
         else:
-            if candidate.get("source") == "plugins4free" and artifact_format in {"AU", "VST"}:
-                name = f"{slug(display)}-{artifact_format.lower()}"
-            formats = {".vst3": "VST3", ".vst": "VST", ".component": "Components", ".clap": "CLAP"}
-            extension = next((value for suffix, value in formats.items() if bundle.lower().endswith(suffix)), candidate.get("format", "VST3"))
-            if extension == "AU":
-                extension = "Components"
-            if extension == "VST":
-                extension = "VST"
-            if not re.search(r"\.(vst3?|component|clap)$", bundle, re.I):
-                bundle += {"VST": ".vst", "VST3": ".vst3", "Components": ".component", "AU": ".component", "CLAP": ".clap"}.get(extension, "")
-            plugin_dir = f"Library/Audio/Plug-Ins/{extension}"
-            bundle_target = f"{plugin_dir}/{Path(bundle).name}"
-            resource_members = [member for member in related if member != bundle]
-            # Archives are staged as one tree. A single postflight step avoids
-            # duplicate Generic Artifact staging paths while retaining resources.
-            install = f'''  postflight_steps do
-    mkdir_p "{{{{user}}}}/{plugin_dir}"
-    move "{bundle}", "{{{{user}}}}/{bundle_target}"
-'''
-            for member in resource_members:
-                relative = member[len(prefix):] if prefix else member
-                resource_target = f"{plugin_dir}/{relative}"
+            if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
+                name = f"{slug(display)}-{candidate['format'].lower()}"
+            suffix_formats = {
+                ".vst3": "VST3", ".vst": "VST", ".component": "Components",
+                ".clap": "CLAP", ".lv2": "LV2",
+            }
+            if not bundles:
+                extension = candidate.get("format", "VST3")
+                suffix = {"AU": ".component", "VST": ".vst"}.get(extension, f".{extension.lower()}")
+                bundles = [f"{filename}{suffix}"]
+            install = "  postflight_steps do\n"
+            for plugin_bundle in bundles:
+                plugin_extension = Path(plugin_bundle).suffix.lower()
+                extension = suffix_formats.get(plugin_extension, candidate.get("format", "VST3"))
+                plugin_dir = f"Library/Audio/Plug-Ins/{extension}"
+                bundle_target = f"{plugin_dir}/{Path(plugin_bundle).name}"
+                install += f'    mkdir_p "{{{{user}}}}/{plugin_dir}"\n'
+                install += f'    move "{plugin_bundle}", "{{{{user}}}}/{bundle_target}"\n'
+
+            # Preserve loose supporting files, while leaving files inside
+            # recognized plugin bundles with their owning bundle.
+            resource_formats = {
+                "au": "Components", "components": "Components", "component": "Components",
+                "vst": "VST", "vst3": "VST3", "clap": "CLAP", "lv2": "LV2",
+            }
+            candidate_format = (candidate.get("format") or "VST3").lower()
+            default_resource_format = resource_formats.get(candidate_format, "VST3")
+            for member in related:
+                relative = member[len(prefix):] if prefix != "." and member.startswith(prefix) else member
+                relative_parts = Path(relative).parts
+                format_index = next(
+                    (index for index, part in enumerate(relative_parts) if part.lower() in resource_formats),
+                    None,
+                )
+                resource_format = resource_formats.get(relative_parts[format_index].lower()) if format_index is not None else None
+                if format_index is not None:
+                    relative = Path(*relative_parts[format_index + 1:]).as_posix()
+                    if relative == ".":
+                        relative = Path(relative_parts[format_index]).name
+                if resource_format is None and len(bundles) == 1:
+                    resource_format = suffix_formats.get(Path(bundles[0]).suffix.lower(), default_resource_format)
+                if resource_format is None:
+                    resource_format = "Resources"
+                resource_dir = f"Library/Audio/Plug-Ins/{resource_format}"
+                resource_target = f"{resource_dir}/{relative}"
                 resource_parent = str(Path(resource_target).parent)
                 install += f'    mkdir_p "{{{{user}}}}/{resource_parent}"\n'
                 install += f'    copy "{member}", "{{{{user}}}}/{resource_target}"\n'
