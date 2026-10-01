@@ -120,7 +120,6 @@ jobs:
               return 1
             }
 
-            printf '\n\n--- Regenerating PR #%s (%d/%d) ---\n\n' "$pr_number" "$position" "$total"
             echo "  Rebasing onto $base_ref..."
             run_step "Checking out PR branch" gh pr checkout "$pr_number" --repo "$REPOSITORY" || return 1
             run_step "Fetching base branch $base_ref" git fetch origin "$base_ref" || return 1
@@ -164,7 +163,14 @@ jobs:
           for index in "${!pr_numbers[@]}"; do
             pr_number="${pr_numbers[$index]}"
             position=$((index + 1))
-            if ! regenerate_one "$pr_number" "$position" "$total_prs"; then
+            echo "::group::Regenerating PR #$pr_number ($position/$total_prs)"
+            if regenerate_one "$pr_number" "$position" "$total_prs"; then
+              regen_status=0
+            else
+              regen_status=$?
+            fi
+            echo "::endgroup::"
+            if ((regen_status != 0)); then
               echo "  FAILED: PR #$pr_number — ${failure_reason:-PR validation}"
               echo "  Continuing with the next PR."
               failed_prs+=("$pr_number")
