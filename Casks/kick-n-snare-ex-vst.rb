@@ -6,5 +6,8 @@ cask "kick-n-snare-ex-vst" do
   desc "Kick-n-Snare EX is a drum rompler for EDM ."
   homepage "https://plugins4free.com/plugin/2963"
   depends_on :macos
-  artifact "Kick n Snare EX/Kick n Snare EX.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Kick n Snare EX/Kick n Snare EX.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Kick n Snare EX.vst"
+  end
 end
