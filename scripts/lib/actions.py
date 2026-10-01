@@ -174,7 +174,8 @@ def update_action():
                 changed.append(path)
         if not changed:
             continue
-        run("git", "add", "--", *(str(path) for path in changed))
+        relative_paths = [path.resolve().relative_to(ROOT).as_posix() for path in changed]
+        run("git", "add", "--", *relative_paths)
         run("git", "commit", "-m", f"Update {plugin_key} casks")
         run("git", "push", "--force-with-lease", "origin", branch)
         from .cask_utils import stanza
@@ -186,7 +187,8 @@ def update_action():
         title = f"Update {name} casks"
         entries = []
         for path in changed:
-            old = run("git", "show", f"origin/{base_branch()}:{path}", capture=True).stdout
+            relative_path = path.resolve().relative_to(ROOT).as_posix()
+            old = run("git", "show", f"origin/{base_branch()}:{relative_path}", capture=True).stdout
             old_version = stanza(old, "version")
             new_version = stanza(path.read_text(), "version")
             entries.append(f"- {path.stem}: {old_version} → {new_version}")
