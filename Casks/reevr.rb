@@ -6,5 +6,8 @@ cask "reevr" do
   desc "Free audio plugin"
   homepage "https://github.com/tiagolr/reevr"
   depends_on :macos
-  artifact "reevr-macos/AU/REEV-R.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "reevr-macos/AU/REEV-R.component", "{{user}}/Library/Audio/Plug-Ins/Components/REEV-R.component"
+  end
 end
