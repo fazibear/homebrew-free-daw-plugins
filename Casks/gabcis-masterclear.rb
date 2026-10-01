@@ -8,6 +8,6 @@ cask "gabcis-masterclear" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "MasterClear.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/MasterClear.vst3"
+    copy "MasterClear.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/MasterClear.vst3", recursive: true
   end
 end
