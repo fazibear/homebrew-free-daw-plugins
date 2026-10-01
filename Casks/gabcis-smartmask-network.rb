@@ -6,8 +6,5 @@ cask "gabcis-smartmask-network" do
   desc "Free audio plugin"
   homepage "https://github.com/rcptr2/gabcis-smartmask-network"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "SmartMask Network.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/SmartMask Network.vst3", recursive: true
-  end
+  artifact "SmartMask Network.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/SmartMask Network.vst3"
 end
