@@ -6,5 +6,8 @@ cask "easymeter" do
   desc "Free audio plugin"
   homepage "https://github.com/bgivenb/EasyMeter"
   depends_on :macos
-  artifact "EasyMeter.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "EasyMeter.component", "{{user}}/Library/Audio/Plug-Ins/Components/EasyMeter.component"
+  end
 end
