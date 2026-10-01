@@ -13,7 +13,5 @@ cask "reevr" do
     move "reevr-macos/LV2/REEV-R.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/REEV-R.lv2"
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
     move "reevr-macos/VST3/REEV-R.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/REEV-R.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/reevr-macos"
-    copy "reevr-macos/readme.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/reevr-macos/readme.txt"
   end
 end
