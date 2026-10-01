@@ -6,5 +6,8 @@ cask "sonatina-viola-vst" do
   desc "Sonatina Viola is a sampled viola ."
   homepage "https://plugins4free.com/plugin/2298"
   depends_on :macos
-  artifact "Sonatina Viola.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Viola.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Viola.vst"
+  end
 end
