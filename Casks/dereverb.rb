@@ -6,8 +6,5 @@ cask "dereverb" do
   desc "Free audio plugin"
   homepage "https://github.com/jenyanepoimannykh-it/dereverb-vst3"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "JenyaDereverb2.component", "{{user}}/Library/Audio/Plug-Ins/Components/JenyaDereverb2.component", recursive: true
-  end
+  artifact "JenyaDereverb2.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/JenyaDereverb2.component"
 end
