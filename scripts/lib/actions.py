@@ -205,6 +205,7 @@ def regenerate_action():
     from .regenerate_casks import candidate_for
     from .create_casks import archive_members, render
     from .cask_utils import preserve_cask_token, stanza
+    from .update_casks import update
     repo = repo_env()
     token = os.environ.get("GH_TOKEN")
     bot = os.environ.get("BOT_LOGIN")
@@ -214,22 +215,27 @@ def regenerate_action():
     else:
         prs = gh_json("pr", "list", "--repo", repo, "--state", "open", "--limit", "100",
                       "--json", "number,author,headRefName,headRepository,labels", token=token)
-        numbers = [p["number"] for p in prs if p.get("author", {}).get("login") == bot
-                   and p.get("headRefName", "").startswith(("automation/discovered-plugins4free-", "automation/discovered-github-"))
-                   and p.get("headRepository", {}).get("nameWithOwner") == repo
-                   and any(label.get("name") == "automation" for label in p.get("labels", []))]
+        automation_prs = [p for p in prs if p.get("author", {}).get("login") == bot
+                          and p.get("headRefName", "").startswith("automation/")
+                          and p.get("headRepository", {}).get("nameWithOwner") == repo
+                          and any(label.get("name") == "automation" for label in p.get("labels", []))]
+        numbers = [p["number"] for p in automation_prs]
+        print(f"Found {len(prs)} open PR(s); selected {len(numbers)} automation PR(s): {', '.join(f'#{n}' for n in numbers) or 'none'}")
     failures = []
     for number in numbers:
         try:
             metadata = gh_json("pr", "view", str(number), "--repo", repo,
                                "--json", "author,baseRefName,headRefName,headRepository,labels", token=token)
             branch = metadata["headRefName"]
-            if not branch.startswith(("automation/discovered-plugins4free-", "automation/discovered-github-")) or metadata.get("headRepository", {}).get("nameWithOwner") != repo or metadata.get("author", {}).get("login") != bot or not any(l.get("name") == "automation" for l in metadata.get("labels", [])):
-                raise RuntimeError(f"PR #{number} failed discovery PR validation")
+            is_discovery = branch.startswith(("automation/discovered-plugins4free-", "automation/discovered-github-"))
+            is_update = branch.startswith("automation/cask-updates-")
+            if not (is_discovery or is_update) or metadata.get("headRepository", {}).get("nameWithOwner") != repo or metadata.get("author", {}).get("login") != bot or not any(l.get("name") == "automation" for l in metadata.get("labels", [])):
+                raise RuntimeError(f"PR #{number} failed automation cask PR validation")
 
-            run("gh", "pr", "checkout", str(number), "--repo", repo)
             base = metadata["baseRefName"]
             run("git", "fetch", "origin", base)
+            run("git", "reset", "--hard", f"origin/{base}")
+            run("gh", "pr", "checkout", str(number), "--repo", repo)
             try:
                 run("git", "rebase", f"origin/{base}")
             except Exception:
@@ -240,14 +246,20 @@ def regenerate_action():
             if not files:
                 raise RuntimeError(f"PR #{number}: no added or modified cask files found")
             for path in files:
-                candidate = candidate_for(path)
-                candidate["archive_members"] = None if candidate["filename"].lower().endswith(".pkg") else archive_members(candidate, strict=True)
-                name, content = render(candidate)
-                if not content:
-                    raise RuntimeError(f"{path}: current source candidate could not produce a cask")
-                if name != path.stem:
-                    content = preserve_cask_token(content, path.stem)
-                path.write_text(content)
+                if is_discovery:
+                    candidate = candidate_for(path)
+                    candidate["archive_members"] = None if candidate["filename"].lower().endswith(".pkg") else archive_members(candidate, strict=True)
+                    name, content = render(candidate)
+                    if not content:
+                        raise RuntimeError(f"{path}: current source candidate could not produce a cask")
+                    if name != path.stem:
+                        content = preserve_cask_token(content, path.stem)
+                    path.write_text(content)
+                else:
+                    status, detail = update(path)
+                    if status not in {"updated", "current"}:
+                        raise RuntimeError(f"{path}: {detail}")
+                    print(f"PR #{number}: {path.stem}: {status}: {detail}")
             changed = run("git", "diff", "--name-only", "--diff-filter=AM", "--", "Casks/*.rb", capture=True).stdout.splitlines()
             for path in changed:
                 run("ruby", "-c", path)
@@ -255,7 +267,7 @@ def regenerate_action():
                 run("git", "add", "--", "Casks")
                 run("git", "commit", "-m", "Regenerate discovery casks")
                 run("git", "push", "--force-with-lease", "origin", branch)
-            print(f"PR #{number}: regenerated")
+            print(f"PR #{number}: {'regenerated' if is_discovery else 'updated'}")
         except Exception as error:
             failures.append((number, error))
             print(f"PR #{number}: failed: {error}", file=sys.stderr)
