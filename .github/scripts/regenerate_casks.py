@@ -62,6 +62,9 @@ def archive_fallback_from_cask(path):
     match = re.search(r'^  pkg "([^"]+)"$', source, re.M)
     if match:
         return (match.group(1), [], ".", None)
+    match = re.search(r'^  dmg "([^"]+\.dmg)"$', source, re.M | re.I)
+    if match:
+        return (match.group(1), [], ".", None)
     return None
 
 

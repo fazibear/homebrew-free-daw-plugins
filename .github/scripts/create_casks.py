@@ -144,6 +144,8 @@ def render(candidate, archive_fallback=None):
             archive = archive_members(candidate)
         if not archive:
             archive = archive_fallback
+        if not archive and filename.lower().endswith(".dmg"):
+            archive = (filename, [], ".", None)
         if not archive:
             return None, None
         bundle, related, prefix, artifact_format = archive
@@ -151,6 +153,8 @@ def render(candidate, archive_fallback=None):
             install = f'  pkg "{bundle}"'
         elif bundle.lower().endswith(".app"):
             install = f'  app "{bundle}"'
+        elif bundle.lower().endswith(".dmg"):
+            install = f'  dmg "{bundle}"'
         else:
             if candidate.get("source") == "plugins4free" and artifact_format in {"AU", "VST"}:
                 name = f"{slug(display)}-{artifact_format.lower()}"
