@@ -243,6 +243,20 @@ def regenerate_action():
                 raise
             result = run("git", "diff", "--diff-filter=AM", "--name-only", f"origin/{base}...HEAD", "--", "Casks/*.rb", capture=True)
             files = [Path(line) for line in result.stdout.splitlines() if line]
+            if is_update and not files:
+                # Update PRs may have become empty after an earlier rebase or
+                # regeneration commit. Recover the cask path from the PR head
+                # commit history so it can be regenerated from the latest release.
+                changed_history = run("git", "log", "--format=", "--name-only", f"origin/{base}..HEAD", "--", "Casks/*.rb", capture=True)
+                files = list(dict.fromkeys(Path(line) for line in changed_history.stdout.splitlines() if line.endswith(".rb")))
+            elif is_update:
+                # A prior regeneration commit may leave unrelated generator
+                # changes in the PR diff; keep update PRs scoped to their own
+                # cask path(s) from commit history.
+                changed_history = run("git", "log", "--format=", "--name-only", f"origin/{base}..HEAD", "--", "Casks/*.rb", capture=True)
+                history_files = list(dict.fromkeys(Path(line) for line in changed_history.stdout.splitlines() if line.endswith(".rb")))
+                if history_files:
+                    files = history_files
             if not files:
                 print(f"PR #{number}: already has no added or modified cask files after rebase")
                 continue
