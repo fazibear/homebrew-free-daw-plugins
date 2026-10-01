@@ -116,6 +116,15 @@ def archive_members(candidate, *, strict=False):
             and (candidate.get("source") != "plugins4free" or root.lower().endswith(suffixes))
         ]
         bundle_paths = list(dict.fromkeys(bundle_paths))
+        # A plugin bundle can contain another format's bundle as an internal
+        # resource (for example, a VST3 binary bundled inside a component's
+        # Resources directory). Keep that nested path inside its parent bundle
+        # instead of generating a second move for it.
+        outermost_bundles = []
+        for root in sorted(bundle_paths, key=lambda path: (len(Path(path).parts), path)):
+            if not any(root.startswith(f"{parent}/") for parent in outermost_bundles):
+                outermost_bundles.append(root)
+        bundle_paths = outermost_bundles
         related = [
             name for name in names
             if not any(name == root or name.startswith(f"{root}/") for root in bundle_paths)
