@@ -9,7 +9,5 @@ cask "synth1-au" do
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
     move "Synth1.component", "{{user}}/Library/Audio/Plug-Ins/Components/Synth1.component"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/__MACOSX/Synth1.component/Contents/Resources"
-    copy "__MACOSX/Synth1.component/Contents/Resources/._s1_07.png", "{{user}}/Library/Audio/Plug-Ins/Components/__MACOSX/Synth1.component/Contents/Resources/._s1_07.png"
   end
 end
