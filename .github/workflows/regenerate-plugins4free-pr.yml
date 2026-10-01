@@ -56,12 +56,7 @@ jobs:
           fi
 
           total_prs=${#pr_numbers[@]}
-          printf '\n========== Regeneration queue =========\n'
-          echo "Found $total_prs PR(s) to regenerate:"
-          for index in "${!pr_numbers[@]}"; do
-            printf '  %2d/%d  PR #%s\n' "$((index + 1))" "$total_prs" "${pr_numbers[$index]}"
-          done
-          printf '=======================================\n'
+          printf 'PRs to regenerate: #%s\n' "$(IFS=', #'; echo "${pr_numbers[*]}")"
 
           regenerate_one() {
             local pr_number="$1"
@@ -81,9 +76,7 @@ jobs:
             [[ "$author" == "$BOT_LOGIN" ]] || return 1
             [[ "$has_label" == true ]] || return 1
 
-            printf '\n\n========== PR %d/%d: #%s =========\n' "$position" "$total" "$pr_number"
-            printf '%s\n' "$head_ref"
-            printf '===================================\n'
+            printf '\n\n\nRegenerating PR #%s (%d/%d)\n' "$pr_number" "$position" "$total"
             echo "  Rebasing onto $base_ref..."
             gh pr checkout "$pr_number" --repo "$REPOSITORY" || return 1
             original_head="$(git rev-parse HEAD)" || return 1
@@ -136,12 +129,7 @@ jobs:
           if ((${#failed_prs[@]} > 0)); then
             failed_count=${#failed_prs[@]}
             failed_list="$(IFS=', '; echo "${failed_prs[*]}")"
-            printf '\n\n========== Regeneration summary =========\n'
-            printf 'Failed: %d of %d PR(s)\n' "$failed_count" "$total_prs"
-            printf 'PR numbers: #%s\n' "$failed_list"
-            printf '=========================================\n'
+            printf '\n%d PR(s) failed regeneration: #%s\n' "$failed_count" "$failed_list"
             exit 1
           fi
-          printf '\n\n========== Regeneration summary =========\n'
-          printf 'Succeeded: %d PR(s)\n' "$total_prs"
-          printf '=========================================\n'
+          printf '\nRegeneration succeeded for %d PR(s).\n' "$total_prs"
