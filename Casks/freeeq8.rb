@@ -8,23 +8,15 @@ cask "freeeq8" do
   depends_on :macos
   container type: :dmg
   postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    copy "FreeEQ8/FreeEQ8.component", "{{user}}/Library/Audio/Plug-Ins/Components/FreeEQ8.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "FreeEQ8/FreeEQ8.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.app/Contents"
-    copy "FreeEQ8/FreeEQ8.app/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.app/Contents/Info.plist"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.app/Contents"
-    copy "FreeEQ8/FreeEQ8.app/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.app/Contents/PkgInfo"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.app/Contents/MacOS"
-    copy "FreeEQ8/FreeEQ8.app/Contents/MacOS/FreeEQ8", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.app/Contents/MacOS/FreeEQ8"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.app/Contents/Resources"
-    copy "FreeEQ8/FreeEQ8.app/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.app/Contents/Resources/RecentFilesMenuTemplate.nib"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.component/Contents"
-    copy "FreeEQ8/FreeEQ8.component/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.component/Contents/Info.plist"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.component/Contents"
-    copy "FreeEQ8/FreeEQ8.component/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.component/Contents/PkgInfo"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.component/Contents/_CodeSignature"
-    copy "FreeEQ8/FreeEQ8.component/Contents/_CodeSignature/CodeResources", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.component/Contents/_CodeSignature/CodeResources"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.component/Contents/MacOS"
-    copy "FreeEQ8/FreeEQ8.component/Contents/MacOS/FreeEQ8", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.component/Contents/MacOS/FreeEQ8"
+    copy "FreeEQ8/FreeEQ8.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.vst3", recursive: true
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    copy "ProEQ8/ProEQ8.component", "{{user}}/Library/Audio/Plug-Ins/Components/ProEQ8.component", recursive: true
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    copy "ProEQ8/ProEQ8.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/ProEQ8.vst3", recursive: true
+    mkdir_p "{{user}}/Applications"
+    copy "FreeEQ8/FreeEQ8.app", "{{user}}/Applications/FreeEQ8.app", recursive: true
   end
 end
