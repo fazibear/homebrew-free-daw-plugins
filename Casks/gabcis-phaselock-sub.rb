@@ -8,6 +8,6 @@ cask "gabcis-phaselock-sub" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "PhaseLock Sub.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/PhaseLock Sub.vst3"
+    copy "PhaseLock Sub.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/PhaseLock Sub.vst3", recursive: true
   end
 end
