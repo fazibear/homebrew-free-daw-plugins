@@ -6,5 +6,8 @@ cask "aspen-cornet-au" do
   desc "Aspen Cornet ."
   homepage "https://plugins4free.com/plugin/3319"
   depends_on :macos
-  artifact "Aspen Cornet.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Aspen Cornet.component", "{{user}}/Library/Audio/Plug-Ins/Components/Aspen Cornet.component"
+  end
 end

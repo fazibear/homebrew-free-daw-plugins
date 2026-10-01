@@ -6,5 +6,8 @@ cask "aspen-cornet-vst" do
   desc "Aspen Cornet ."
   homepage "https://plugins4free.com/plugin/3319"
   depends_on :macos
-  artifact "Aspen Cornet.vst3.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Aspen Cornet.vst3.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Aspen Cornet.vst3.vst"
+  end
 end
