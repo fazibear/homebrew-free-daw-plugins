@@ -8,24 +8,14 @@ cask "jc303" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "JC-303_MacOS_Universal-0.13.0/AU/JC303.component", "{{user}}/Library/Audio/Plug-Ins/Components/JC303.component"
+    copy "JC-303_MacOS_Universal-0.13.0/AU/JC303.component", "{{user}}/Library/Audio/Plug-Ins/Components/JC303.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
-    move "JC-303_MacOS_Universal-0.13.0/CLAP/JC303.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/JC303.clap"
+    copy "JC-303_MacOS_Universal-0.13.0/CLAP/JC303.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/JC303.clap", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/LV2"
-    move "JC-303_MacOS_Universal-0.13.0/LV2/JC303.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/JC303.lv2"
+    copy "JC-303_MacOS_Universal-0.13.0/LV2/JC303.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/JC303.lv2", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "JC-303_MacOS_Universal-0.13.0/VST3/JC303.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/JC303.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents"
-    copy "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/PkgInfo"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/_CodeSignature"
-    copy "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/_CodeSignature/CodeResources", "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/_CodeSignature/CodeResources"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/Resources"
-    copy "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/Resources/RecentFilesMenuTemplate.nib"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/Resources"
-    copy "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/Resources/Icon.icns", "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/Resources/Icon.icns"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/MacOS"
-    copy "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/MacOS/JC303", "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/MacOS/JC303"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents"
-    copy "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Resources/JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app/Contents/Info.plist"
+    copy "JC-303_MacOS_Universal-0.13.0/VST3/JC303.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/JC303.vst3", recursive: true
+    mkdir_p "{{user}}/Applications"
+    copy "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app", "{{user}}/Applications/JC303.app", recursive: true
   end
 end
