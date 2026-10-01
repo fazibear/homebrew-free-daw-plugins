@@ -1,12 +1,14 @@
-name: Regenerate Plugins4Free cask PR
-run-name: Regenerate Plugins4Free PR #${{ inputs.pr_number }}
+name: Regenerate Plugins4Free cask PRs
+run-name: Regenerate Plugins4Free cask PRs
 
 on:
+  schedule:
+    - cron: "17 3 * * *"
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "Existing Plugins4Free discovery PR number"
-        required: true
+        description: "Optional PR number; leave blank to regenerate all open Plugins4Free discovery PRs"
+        required: false
         type: number
 
 permissions:
@@ -26,53 +28,89 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/cask-regenerator"
           cp .github/scripts/create_casks.py .github/scripts/regenerate_casks.py "$RUNNER_TEMP/cask-regenerator/"
-      - name: Check out and validate the existing discovery PR
-        id: pr
+      - name: Rebase and regenerate open discovery PRs
         env:
           GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
           REPOSITORY: ${{ github.repository }}
-          PR_NUMBER: ${{ inputs.pr_number }}
           BOT_LOGIN: ${{ secrets.CASK_BOT_LOGIN }}
-        run: |
-          set -euo pipefail
-          metadata="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json author,baseRefName,headRefName,headRepository,labels)"
-          head_ref="$(jq -r '.headRefName' <<< "$metadata")"
-          base_ref="$(jq -r '.baseRefName' <<< "$metadata")"
-          head_repo="$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")"
-          author="$(jq -r '.author.login' <<< "$metadata")"
-          has_label="$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")"
-          [[ "$head_ref" == automation/discovered-plugins4free-* ]]
-          [[ "$head_repo" == "$REPOSITORY" ]]
-          [[ "$author" == "$BOT_LOGIN" ]]
-          [[ "$has_label" == true ]]
-          gh pr checkout "$PR_NUMBER" --repo "$REPOSITORY"
-          echo "head_ref=$head_ref" >> "$GITHUB_OUTPUT"
-          echo "base_ref=$base_ref" >> "$GITHUB_OUTPUT"
-      - name: Regenerate casks with the current generator
-        env:
-          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
-          REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ inputs.pr_number }}
-          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
-          BASE_REF: ${{ steps.pr.outputs.base_ref }}
         run: |
           set -euo pipefail
-          original_head="$(git rev-parse HEAD)"
-          git fetch origin "$BASE_REF"
-          git rebase "origin/$BASE_REF"
-          files=()
-          while IFS= read -r file; do files+=("$file"); done < <(git diff --diff-filter=AM --name-only "origin/$BASE_REF...HEAD" -- 'Casks/*.rb')
-          ((${#files[@]} > 0))
-          python3 "$RUNNER_TEMP/cask-regenerator/regenerate_casks.py" "${files[@]}"
-          for file in "${files[@]}"; do ruby -c "$file"; done
-          if ! git diff --quiet -- "${files[@]}"; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -- "${files[@]}"
-            git commit -m "Regenerate Plugins4Free casks"
-          fi
-          if [[ "$(git rev-parse HEAD)" != "$original_head" ]]; then
-            git push --force-with-lease origin "HEAD:$HEAD_REF"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [[ -n "$PR_NUMBER" ]]; then
+            pr_numbers=("$PR_NUMBER")
           else
-            echo "PR already matches the base branch and current generator"
+            pr_numbers=()
+            open_prs="$(gh pr list --repo "$REPOSITORY" --state open --limit 100 \
+              --json number,author,headRefName,headRepository,labels)"
+            while IFS= read -r number; do
+              pr_numbers+=("$number")
+            done < <(jq -r --arg bot "$BOT_LOGIN" --arg repo "$REPOSITORY" \
+              '.[] | select(.author.login == $bot and (.headRefName | startswith("automation/discovered-plugins4free-")) and .headRepository.nameWithOwner == $repo and ([.labels[].name] | index("automation"))) | .number' \
+              <<< "$open_prs")
+          fi
+
+          if ((${#pr_numbers[@]} == 0)); then
+            echo "No open Plugins4Free discovery PRs to regenerate"
+            exit 0
+          fi
+
+          regenerate_one() {
+            local pr_number="$1"
+            local metadata head_ref base_ref head_repo author has_label original_head
+            local files=()
+
+            metadata="$(gh pr view "$pr_number" --repo "$REPOSITORY" --json author,baseRefName,headRefName,headRepository,labels)" || return 1
+            head_ref="$(jq -r '.headRefName' <<< "$metadata")"
+            base_ref="$(jq -r '.baseRefName' <<< "$metadata")"
+            head_repo="$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")"
+            author="$(jq -r '.author.login' <<< "$metadata")"
+            has_label="$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")"
+            [[ "$head_ref" == automation/discovered-plugins4free-* ]] || return 1
+            [[ "$head_repo" == "$REPOSITORY" ]] || return 1
+            [[ "$author" == "$BOT_LOGIN" ]] || return 1
+            [[ "$has_label" == true ]] || return 1
+
+            echo "Regenerating PR #$pr_number ($head_ref)"
+            gh pr checkout "$pr_number" --repo "$REPOSITORY" || return 1
+            original_head="$(git rev-parse HEAD)" || return 1
+            git fetch origin "$base_ref" || return 1
+            if ! git rebase "origin/$base_ref"; then
+              git rebase --abort || true
+              return 1
+            fi
+
+            while IFS= read -r file; do files+=("$file"); done < <(
+              git diff --diff-filter=AM --name-only "origin/$base_ref...HEAD" -- 'Casks/*.rb'
+            )
+            ((${#files[@]} > 0)) || return 1
+            python3 "$RUNNER_TEMP/cask-regenerator/regenerate_casks.py" "${files[@]}" || return 1
+            for file in "${files[@]}"; do ruby -c "$file" || return 1; done
+
+            if ! git diff --quiet -- "${files[@]}"; then
+              git add -- "${files[@]}"
+              git commit -m "Regenerate Plugins4Free casks" || return 1
+            fi
+
+            if [[ "$(git rev-parse HEAD)" != "$original_head" ]]; then
+              git push --force-with-lease origin "HEAD:$head_ref" || return 1
+            else
+              echo "PR #$pr_number already matches the base branch and current generator"
+            fi
+          }
+
+          failed=0
+          for pr_number in "${pr_numbers[@]}"; do
+            if ! regenerate_one "$pr_number"; then
+              echo "Failed to regenerate PR #$pr_number; continuing with the next PR"
+              failed=$((failed + 1))
+              git rebase --abort 2>/dev/null || true
+              git reset --hard
+            fi
+          done
+          if ((failed > 0)); then
+            echo "$failed PR(s) failed regeneration"
+            exit 1
           fi
