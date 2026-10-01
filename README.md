@@ -1,58 +1,32 @@
-# Free DAW Plugins — Homebrew Cask Tap
+# Free DAW Plugins
 
-Homebrew casks for free audio plugins and music-production tools for macOS.
+Install free audio plugins and music-production tools on macOS with Homebrew.
 
-This tap includes instruments, effects, analyzers, utilities, and plugin bundles distributed as macOS installers or archives. Availability and licensing belong to the original plugin authors.
+## Install a plugin
 
-## Install the tap
+Install the tap, then install a plugin by its cask name:
 
 ```sh
 brew tap fazibear/free-daw-plugins
 brew install --cask peakeater
 ```
 
-Search the tap with:
+Find available plugins with:
 
 ```sh
 brew search fazibear/free-daw-plugins
 ```
 
-Remove a plugin with `brew uninstall --cask <cask-name>`.
+Remove a plugin with:
 
-## Plugin formats
+```sh
+brew uninstall --cask peakeater
+```
 
-Casks may install VST, VST3, Audio Unit, CLAP, or complete plugin bundles. The exact format and installation location depend on the downloaded package. Check the cask and upstream project before installing.
+## Use a plugin
 
-### ZIP downloads from Plugins4Free
+Plugins may be available as VST, VST3, Audio Unit, CLAP, or standalone apps. Open your DAW and rescan its plugins if the new plugin does not appear. The supported formats and installation details vary by plugin; check its product page for DAW and macOS compatibility.
 
-Plugins4Free ZIP links are direct downloads, but a successful download does not mean
-the plugin is installable on current macOS. Add a ZIP cask only after checking the
-archive contents and the plugin's macOS compatibility. In particular, legacy
-Maize Sampler AU/VST bundles (including VSCO2 Organ, [plugin 2726](https://plugins4free.com/plugin/2726/))
-are not compatible with macOS Catalina and later, according to the upstream plugin
-author. Those archives should not be published as working casks for supported
-modern macOS versions.
+macOS may ask you to approve a plugin the first time you open it. Review the prompt in **System Settings → Privacy & Security**.
 
-For compatible ZIPs, use Homebrew's `artifact` stanza to install the actual
-`.component`, `.vst`, `.vst3`, or `.clap` bundle into the corresponding user plugin
-directory. Preserve any resource folder or other files the plugin needs alongside
-the bundle; installing only the plugin binary often results in a plugin that is
-visible to a DAW but cannot load its presets or samples. Prefer a tested, versioned
-upstream archive with a real SHA-256 checksum. If the archive has no stable version
-or checksum, document that limitation in the cask.
-
-Most plugins require macOS and may need approval in **System Settings → Privacy & Security** the first time they are opened by a DAW.
-
-## Browse
-
-Browse the [`Casks`](Casks) directory. Each cask includes the upstream homepage, version, download URL, macOS requirement, and installer or artifact configuration.
-
-## Automated discovery
-
-The repository periodically searches GitHub releases and Plugins4Free for new macOS plugin downloads. Discovery creates pull requests; it does not silently add software to the tap. Candidates are checked for cask syntax and basic metadata before merging.
-
-Automated suggestions can be incomplete or incorrect. Review the upstream release, license, download URL, checksum, and installed plugin locations before approving a change.
-
-## License and responsibility
-
-This repository contains Homebrew cask definitions, not the plugin software itself. Plugins remain the property of their respective authors and are governed by their own licenses. Consult upstream projects for support, licensing, and compatibility information.
+Plugins are provided by their original developers. Check each developer's license and support information before use.

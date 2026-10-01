@@ -1,0 +1,29 @@
+name: Discover Bedroom Producers Blog monthly freebies
+
+on:
+  schedule:
+    - cron: "23 9 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lightpanda
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "$RUNNER_TEMP/lightpanda" https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux
+          chmod +x "$RUNNER_TEMP/lightpanda"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Collect links from the current BPB monthly thread
+        run: python3 scripts/bpb_freebies.py > bpb-freebies.json
+      - name: Upload review candidates
+        uses: actions/upload-artifact@v4
+        with:
+          name: bpb-monthly-freebies
+          path: bpb-freebies.json
+          if-no-files-found: error
