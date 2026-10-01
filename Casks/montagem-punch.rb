@@ -8,20 +8,10 @@ cask "montagem-punch" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "Montagem Punch.component", "{{user}}/Library/Audio/Plug-Ins/Components/Montagem Punch.component"
+    copy "Montagem Punch.component", "{{user}}/Library/Audio/Plug-Ins/Components/Montagem Punch.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "Montagem Punch.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Montagem Punch.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources"
-    copy "INSTALL.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/INSTALL.txt"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources"
-    copy "TERMS.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/TERMS.txt"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Punch.app/Contents/MacOS"
-    copy "Montagem Punch.app/Contents/MacOS/Montagem Punch", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Punch.app/Contents/MacOS/Montagem Punch"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Punch.app/Contents/Resources"
-    copy "Montagem Punch.app/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Punch.app/Contents/Resources/RecentFilesMenuTemplate.nib"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Punch.app/Contents"
-    copy "Montagem Punch.app/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Punch.app/Contents/Info.plist"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Punch.app/Contents"
-    copy "Montagem Punch.app/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Punch.app/Contents/PkgInfo"
+    copy "Montagem Punch.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Montagem Punch.vst3", recursive: true
+    mkdir_p "{{user}}/Applications"
+    copy "Montagem Punch.app", "{{user}}/Applications/Montagem Punch.app", recursive: true
   end
 end
