@@ -6,10 +6,6 @@ cask "delirion" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/delirion"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "AU/Delirion.component", "{{user}}/Library/Audio/Plug-Ins/Components/Delirion.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "VST3/Delirion.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Delirion.vst3", recursive: true
-  end
+  artifact "AU/Delirion.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Delirion.component"
+  artifact "VST3/Delirion.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/Delirion.vst3"
 end
