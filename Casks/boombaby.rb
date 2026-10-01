@@ -6,5 +6,8 @@ cask "boombaby" do
   desc "Free audio plugin"
   homepage "https://github.com/auditive-tokyo/BoomBaby"
   depends_on :macos
-  artifact "BoomBaby.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "BoomBaby.component", "{{user}}/Library/Audio/Plug-Ins/Components/BoomBaby.component"
+  end
 end
