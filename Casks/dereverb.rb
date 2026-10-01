@@ -8,6 +8,6 @@ cask "dereverb" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "JenyaDereverb2.component", "{{user}}/Library/Audio/Plug-Ins/Components/JenyaDereverb2.component"
+    copy "JenyaDereverb2.component", "{{user}}/Library/Audio/Plug-Ins/Components/JenyaDereverb2.component", recursive: true
   end
 end
