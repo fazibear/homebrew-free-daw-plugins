@@ -6,5 +6,10 @@ cask "combat-loop-drum-machine-vst" do
   desc "Combat Loop Drum Machine is a drum kits sample and loop based drum VST instrument."
   homepage "https://plugins4free.com/plugin/1846"
   depends_on :macos
-  artifact "COMBAT LOOP DRUM MACHINE Mac vst/COMBAT LOOP DRUM MACHINE.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "COMBAT LOOP DRUM MACHINE Mac vst/COMBAT LOOP DRUM MACHINE.vst", "{{user}}/Library/Audio/Plug-Ins/VST/COMBAT LOOP DRUM MACHINE.vst"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    copy "COMBAT LOOP DRUM MACHINE Mac vst/CLDM vst manual.pdf", "{{user}}/Library/Audio/Plug-Ins/VST/CLDM vst manual.pdf"
+  end
 end
