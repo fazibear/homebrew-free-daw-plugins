@@ -8,6 +8,6 @@ cask "dtblkfx" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "DtBlkFx.component", "{{user}}/Library/Audio/Plug-Ins/Components/DtBlkFx.component"
+    copy "DtBlkFx.component", "{{user}}/Library/Audio/Plug-Ins/Components/DtBlkFx.component", recursive: true
   end
 end
