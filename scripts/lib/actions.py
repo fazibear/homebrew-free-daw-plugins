@@ -1,5 +1,6 @@
 """Python action entry points shared by GitHub Actions workflows."""
 import os
+import plistlib
 import re
 import sys
 from pathlib import Path
@@ -342,6 +343,44 @@ def merge_action():
         sys.stdout.write(output)
 
 
+def installed_payload_snapshot():
+    """Track real payload files, excluding Homebrew staging and receipts."""
+    roots = [
+        Path("/Applications"), Path.home() / "Applications",
+        Path("/Library/Audio/Plug-Ins"), Path.home() / "Library/Audio/Plug-Ins",
+        Path("/Library/Application Support"), Path.home() / "Library/Application Support",
+    ]
+    # Package installers may place payloads outside the standard plugin folders.
+    receipt_files = []
+    receipts = run("pkgutil", "--pkgs", capture=True).stdout.splitlines()
+    for receipt in receipts:
+        result = run("pkgutil", "--files", receipt, capture=True, check=False)
+        info = run("pkgutil", "--pkg-info-plist", receipt, capture=True, check=False)
+        if result.returncode or info.returncode:
+            continue
+        metadata = plistlib.loads(info.stdout.encode())
+        base = Path(metadata.get("volume", "/")) / metadata.get("install-location", "/").lstrip("/")
+        receipt_files.extend(base / name for name in result.stdout.splitlines() if name)
+    snapshot = {}
+    groups = [root.rglob("*") for root in roots if root.is_dir()]
+    groups.append(receipt_files)
+    for paths in groups:
+        for path in paths:
+            if path.is_file():
+                stat = path.stat()
+                snapshot[str(path)] = (stat.st_size, stat.st_mtime_ns, stat.st_ino)
+    return snapshot
+
+
+def verify_installed_payload(before, after, token):
+    installed = sorted(path for path, state in after.items() if before.get(path) != state)
+    if not installed:
+        raise RuntimeError(f"{token}: Homebrew reported success but no installed payload files were found")
+    print(f"Verified {len(installed)} installed payload file(s) for {token}:")
+    for path in installed[:20]:
+        print(f"  {path}")
+
+
 def validate_action():
     repo = repo_env()
     token = os.environ.get("GH_TOKEN")
@@ -384,8 +423,12 @@ def validate_action():
                 raise RuntimeError(f"{filename}: cannot read cask token")
             token_name = match.group(1)
             print(f"Installing {token_name} from {filename}")
+            before = installed_payload_snapshot()
             run("brew", "install", "--cask", "--verbose", f"{repo}/{token_name}")
-            run("brew", "uninstall", "--cask", "--force", f"{repo}/{token_name}")
+            try:
+                verify_installed_payload(before, installed_payload_snapshot(), token_name)
+            finally:
+                run("brew", "uninstall", "--cask", "--force", f"{repo}/{token_name}")
     except Exception as error:
         body = "Cask validation failed.\n\n```text\n" + str(error)[-4000:] + "\n```\n\nWorkflow run: " + os.environ.get("GITHUB_SERVER_URL", "https://github.com") + "/" + repo + "/actions/runs/" + os.environ.get("GITHUB_RUN_ID", "")
         gh("pr", "comment", number, "--repo", repo, "--body", body, token=token, check=False)
