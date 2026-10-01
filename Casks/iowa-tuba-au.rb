@@ -6,5 +6,8 @@ cask "iowa-tuba-au" do
   desc "Iowa Tuba is a sampled tuba from the University of Iowa Electronic Music Studios."
   homepage "https://plugins4free.com/plugin/2422"
   depends_on :macos
-  artifact "Iowa Tuba.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Iowa Tuba.component", "{{user}}/Library/Audio/Plug-Ins/Components/Iowa Tuba.component"
+  end
 end

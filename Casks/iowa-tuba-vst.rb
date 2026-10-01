@@ -6,5 +6,8 @@ cask "iowa-tuba-vst" do
   desc "Iowa Tuba is a sampled tuba from the University of Iowa Electronic Music Studios."
   homepage "https://plugins4free.com/plugin/2422"
   depends_on :macos
-  artifact "Iowa Tuba.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Iowa Tuba.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Iowa Tuba.vst"
+  end
 end
