@@ -58,7 +58,7 @@ def release_asset(release, old_url):
     return assets[0] if assets else None
 
 
-def update(path):
+def update(path, *, regenerate=False):
     source = path.read_text()
     current = stanza(source, "version")
     homepage = stanza(source, "homepage")
@@ -77,7 +77,7 @@ def update(path):
         return "skip", "GitHub returned no latest release tag"
     if version_numbers(current) is None or version_numbers(latest) is None:
         return "skip", f"could not compare versions current={current}, latest={latest}"
-    if newer_version(latest, current):
+    if newer_version(latest, current) and not regenerate:
         return "current", f"current version {current} is newer than release tag {latest}"
 
     asset = release_asset(release, old_url)

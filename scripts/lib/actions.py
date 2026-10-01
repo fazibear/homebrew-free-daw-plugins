@@ -59,7 +59,7 @@ def _open_pr(branch):
 def publish_discovery(source, paths):
     configure_git()
     repo = repo_env()
-    token = os.environ.get("GH_TOKEN")
+    gh_token = os.environ.get("GH_TOKEN")
     groups = {}
     if source == "plugins4free":
         for path in paths:
@@ -207,14 +207,14 @@ def regenerate_action():
     from .cask_utils import preserve_cask_token, stanza
     from .update_casks import update
     repo = repo_env()
-    token = os.environ.get("GH_TOKEN")
+    gh_token = os.environ.get("GH_TOKEN")
     bot = os.environ.get("BOT_LOGIN")
     requested = os.environ.get("PR_NUMBER")
     if requested:
         numbers = [int(requested)]
     else:
         prs = gh_json("pr", "list", "--repo", repo, "--state", "open", "--limit", "100",
-                      "--json", "number,author,headRefName,headRepository,labels", token=token)
+                      "--json", "number,author,headRefName,headRepository,labels", token=gh_token)
         automation_prs = [p for p in prs if p.get("author", {}).get("login") == bot
                           and p.get("headRefName", "").startswith("automation/")
                           and p.get("headRepository", {}).get("nameWithOwner") == repo
@@ -225,7 +225,7 @@ def regenerate_action():
     for number in numbers:
         try:
             metadata = gh_json("pr", "view", str(number), "--repo", repo,
-                               "--json", "author,baseRefName,headRefName,headRepository,labels", token=token)
+                               "--json", "author,baseRefName,headRefName,headRepository,labels", token=gh_token)
             branch = metadata["headRefName"]
             is_discovery = branch.startswith(("automation/discovered-plugins4free-", "automation/discovered-github-"))
             is_update = branch.startswith("automation/cask-updates-")
@@ -233,37 +233,22 @@ def regenerate_action():
                 raise RuntimeError(f"PR #{number} failed automation cask PR validation")
 
             base = metadata["baseRefName"]
-            run("git", "fetch", "origin", base)
-            run("git", "fetch", "origin", f"refs/pull/{number}/head")
-            run("git", "checkout", "--detach", "FETCH_HEAD")
-            try:
-                run("git", "rebase", f"origin/{base}")
-            except Exception:
-                run("git", "rebase", "--abort", check=False)
-                raise
-            result = run("git", "diff", "--diff-filter=AM", "--name-only", f"origin/{base}...HEAD", "--", "Casks/*.rb", capture=True)
-            files = [Path(line) for line in result.stdout.splitlines() if line]
-            if is_update and not files:
-                # Update PRs may have become empty after an earlier rebase or
-                # regeneration commit. Recover the cask path from the PR head
-                # commit history so it can be regenerated from the latest release.
-                changed_history = run("git", "log", "--format=", "--name-only", f"origin/{base}..HEAD", "--", "Casks/*.rb", capture=True)
-                files = list(dict.fromkeys(Path(line) for line in changed_history.stdout.splitlines() if line.endswith(".rb")))
-            elif is_update:
-                # A prior regeneration commit may leave unrelated generator
-                # changes in the PR diff; keep update PRs scoped to their own
-                # cask path(s) from commit history.
-                changed_history = run("git", "log", "--format=", "--name-only", f"origin/{base}..HEAD", "--", "Casks/*.rb", capture=True)
-                history_files = list(dict.fromkeys(Path(line) for line in changed_history.stdout.splitlines() if line.endswith(".rb")))
-                if history_files:
-                    files = history_files
+            run("git", "fetch", "origin", f"+refs/pull/{number}/head:refs/remotes/origin/pr-{number}")
+            run("git", "checkout", "-B", branch, f"refs/remotes/origin/pr-{number}")
+            cask_token = branch.removeprefix("automation/discovered-plugins4free-").removeprefix("automation/discovered-github-").removeprefix("automation/cask-updates-")
+            files = [Path("Casks") / f"{cask_token}.rb"]
+            if not files[0].is_file():
+                candidates = run("git", "ls-tree", "-r", "--name-only", "HEAD", "--", "Casks", capture=True).stdout.splitlines()
+                files = [Path(name) for name in candidates if Path(name).stem == cask_token]
             if not files:
-                print(f"PR #{number}: already has no added or modified cask files after rebase")
-                continue
+                raise RuntimeError(f"PR #{number}: could not find cask for automation branch {branch}")
             for path in files:
                 if is_discovery:
                     candidate = candidate_for(path)
-                    candidate["archive_members"] = None if candidate["filename"].lower().endswith(".pkg") else archive_members(candidate, strict=True)
+                    if candidate["filename"].lower().endswith(".pkg"):
+                        candidate["archive_members"] = None
+                    else:
+                        candidate["archive_members"] = archive_members(candidate, strict=True)
                     name, content = render(candidate)
                     if not content:
                         raise RuntimeError(f"{path}: current source candidate could not produce a cask")
@@ -271,8 +256,8 @@ def regenerate_action():
                         content = preserve_cask_token(content, path.stem)
                     path.write_text(content)
                 else:
-                    status, detail = update(path)
-                    if status not in {"updated", "current"}:
+                    status, detail = update(path, regenerate=True)
+                    if status != "updated":
                         raise RuntimeError(f"{path}: {detail}")
                     print(f"PR #{number}: {path.stem}: {status}: {detail}")
             changed = run("git", "diff", "--name-only", "--diff-filter=AM", "--", "Casks/*.rb", capture=True).stdout.splitlines()
