@@ -6,8 +6,5 @@ cask "royotoms-au" do
   desc "Royotoms is a sampled rototoms set."
   homepage "https://plugins4free.com/plugin/2391"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "Royotoms.component", "{{user}}/Library/Audio/Plug-Ins/Components/Royotoms.component", recursive: true
-  end
+  artifact "Royotoms.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Royotoms.component"
 end
