@@ -7,16 +7,9 @@ cask "freeeq8" do
   homepage "https://github.com/GareBear99/FreeEQ8"
   depends_on :macos
   container type: :dmg
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "FreeEQ8/FreeEQ8.component", "{{user}}/Library/Audio/Plug-Ins/Components/FreeEQ8.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "FreeEQ8/FreeEQ8.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/FreeEQ8.vst3", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "ProEQ8/ProEQ8.component", "{{user}}/Library/Audio/Plug-Ins/Components/ProEQ8.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "ProEQ8/ProEQ8.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/ProEQ8.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "FreeEQ8/FreeEQ8.app", "{{user}}/Applications/FreeEQ8.app", recursive: true
-  end
+  artifact "FreeEQ8/FreeEQ8.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/FreeEQ8.component"
+  artifact "FreeEQ8/FreeEQ8.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/FreeEQ8.vst3"
+  artifact "ProEQ8/ProEQ8.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/ProEQ8.component"
+  artifact "ProEQ8/ProEQ8.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/ProEQ8.vst3"
+  app "FreeEQ8/FreeEQ8.app", target: "#{Dir.home}/Applications/FreeEQ8.app"
 end
