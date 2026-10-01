@@ -8,20 +8,10 @@ cask "montagem-widener" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "Montagem Widener.component", "{{user}}/Library/Audio/Plug-Ins/Components/Montagem Widener.component"
+    copy "Montagem Widener.component", "{{user}}/Library/Audio/Plug-Ins/Components/Montagem Widener.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "Montagem Widener.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Montagem Widener.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources"
-    copy "INSTALL.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/INSTALL.txt"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Widener.app/Contents/MacOS"
-    copy "Montagem Widener.app/Contents/MacOS/Montagem Widener", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Widener.app/Contents/MacOS/Montagem Widener"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Widener.app/Contents/Resources"
-    copy "Montagem Widener.app/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Widener.app/Contents/Resources/RecentFilesMenuTemplate.nib"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Widener.app/Contents"
-    copy "Montagem Widener.app/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Widener.app/Contents/Info.plist"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Widener.app/Contents"
-    copy "Montagem Widener.app/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem Widener.app/Contents/PkgInfo"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources"
-    copy "TERMS.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/TERMS.txt"
+    copy "Montagem Widener.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Montagem Widener.vst3", recursive: true
+    mkdir_p "{{user}}/Applications"
+    copy "Montagem Widener.app", "{{user}}/Applications/Montagem Widener.app", recursive: true
   end
 end
