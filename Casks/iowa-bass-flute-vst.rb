@@ -6,5 +6,8 @@ cask "iowa-bass-flute-vst" do
   desc "Iowa Bass Flute is a sampled bass flute from the University of Iowa Electronic Music Studios."
   homepage "https://plugins4free.com/plugin/2418"
   depends_on :macos
-  artifact "Iowa Bass Flute.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Iowa Bass Flute.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Iowa Bass Flute.vst"
+  end
 end
