@@ -23,6 +23,24 @@ Remove a plugin with `brew uninstall --cask <cask-name>`.
 
 Casks may install VST, VST3, Audio Unit, CLAP, or complete plugin bundles. The exact format and installation location depend on the downloaded package. Check the cask and upstream project before installing.
 
+### ZIP downloads from Plugins4Free
+
+Plugins4Free ZIP links are direct downloads, but a successful download does not mean
+the plugin is installable on current macOS. Add a ZIP cask only after checking the
+archive contents and the plugin's macOS compatibility. In particular, legacy
+Maize Sampler AU/VST bundles (including VSCO2 Organ, [plugin 2726](https://plugins4free.com/plugin/2726/))
+are not compatible with macOS Catalina and later, according to the upstream plugin
+author. Those archives should not be published as working casks for supported
+modern macOS versions.
+
+For compatible ZIPs, use Homebrew's `artifact` stanza to install the actual
+`.component`, `.vst`, `.vst3`, or `.clap` bundle into the corresponding user plugin
+directory. Preserve any resource folder or other files the plugin needs alongside
+the bundle; installing only the plugin binary often results in a plugin that is
+visible to a DAW but cannot load its presets or samples. Prefer a tested, versioned
+upstream archive with a real SHA-256 checksum. If the archive has no stable version
+or checksum, document that limitation in the cask.
+
 Most plugins require macOS and may need approval in **System Settings → Privacy & Security** the first time they are opened by a DAW.
 
 ## Browse

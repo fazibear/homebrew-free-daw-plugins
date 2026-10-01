@@ -30,7 +30,7 @@ def existing():
         print(f"warning: Homebrew catalog unavailable: {error}", file=sys.stderr)
     return result
 
-def archive_member(candidate):
+def archive_members(candidate):
     if not candidate["filename"].lower().endswith(".zip"):
         return None
     try:
@@ -41,15 +41,22 @@ def archive_member(candidate):
             archive.write(data)
             archive.flush()
             with zipfile.ZipFile(archive.name) as zipped:
-                names = [name.rstrip("/") for name in zipped.namelist() if name.rstrip("/")]
+                members = [item for item in zipped.infolist() if not item.is_dir()]
+                names = [item.filename for item in members]
         formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
         suffixes = formats.get(candidate.get("format"), (".pkg", ".vst3", ".vst", ".component", ".clap"))
         member = next((name for name in names if name.lower().endswith(suffixes)), None)
         if member:
-            print(f"Cask generator: {candidate['filename']} contains {member}", file=sys.stderr)
+            # VST2/legacy sampler archives commonly keep sample data beside the
+            # plugin binary. Preserve those siblings instead of installing only
+            # the bundle and producing a plugin that cannot find its content.
+            parent = str(Path(member).parent)
+            prefix = f"{parent}/" if parent != "." else ""
+            related = [name for name in names if name == member or (prefix and name.startswith(prefix))]
+            print(f"Cask generator: {candidate['filename']} contains {member} and {len(related) - 1} sibling file(s)", file=sys.stderr)
         else:
             print(f"Cask generator: no {candidate.get('format', 'plugin')} bundle found in {candidate['filename']}", file=sys.stderr)
-        return member
+        return (member, related, prefix) if member else None
     except Exception as error:
         print(f"warning: could not inspect {candidate['filename']}: {error}", file=sys.stderr)
         return None
@@ -67,9 +74,10 @@ def render(candidate):
     elif filename.lower().endswith(".dmg"):
         install = f'  dmg "{filename}"'
     else:
-        bundle = archive_member(candidate)
-        if not bundle:
+        archive = archive_members(candidate)
+        if not archive:
             return None, None
+        bundle, related, prefix = archive
         if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
             return name, f'''cask "{name}" do
@@ -90,7 +98,17 @@ end
             extension = "VST"
         if not re.search(r"\.(vst3?|component|clap)$", bundle, re.I):
             bundle += {"VST": ".vst", "VST3": ".vst3", "Components": ".component", "AU": ".component", "CLAP": ".clap"}.get(extension, "")
-        install = f'  artifact "{bundle}", target: "#{{Dir.home}}/Library/Audio/Plug-Ins/{extension}"'
+        target = f"#{{Dir.home}}/Library/Audio/Plug-Ins/{extension}"
+        install_lines = [f'  artifact "{bundle}", target: "{target}"']
+        # Non-bundle files in the same archive directory may be required data
+        # (e.g. Maize Sampler instrument folders). Install each with its path
+        # preserved relative to the plugin destination.
+        for member in related:
+            if member == bundle:
+                continue
+            relative = member[len(prefix):] if prefix else member
+            install_lines.append(f'  artifact "{member}", target: "{target}/{relative}"')
+        install = "\n".join(install_lines)
     return name, f'''cask "{name}" do
   version "{candidate.get("version", "latest")}"
 {checksum}

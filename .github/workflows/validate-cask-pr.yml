@@ -65,6 +65,6 @@ jobs:
           for file in $files; do
             token="$(sed -n 's/^cask "\([a-z0-9-]*\)" do$/\1/p' "$file")"
             echo "Installing $token from $file"
-            brew install --cask "$GITHUB_REPOSITORY/$token"
-            brew uninstall --cask --force "$GITHUB_REPOSITORY/$token" || true
+            brew install --cask --verbose "$GITHUB_REPOSITORY/$token"
+            brew uninstall --cask --force "$GITHUB_REPOSITORY/$token"
           done
