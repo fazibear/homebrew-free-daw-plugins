@@ -6,5 +6,10 @@ cask "k1v-au" do
   desc "K1v is a classic rompler that emulates the famous japanese classic Kawai K1 from 1988."
   homepage "https://plugins4free.com/plugin/3148"
   depends_on :macos
-  artifact "NilsK1v.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "NilsK1v.component", "{{user}}/Library/Audio/Plug-Ins/Components/NilsK1v.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/__MACOSX/NilsK1v.component/Contents"
+    copy "__MACOSX/NilsK1v.component/Contents/._Pkginfo", "{{user}}/Library/Audio/Plug-Ins/Components/__MACOSX/NilsK1v.component/Contents/._Pkginfo"
+  end
 end
