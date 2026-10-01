@@ -6,5 +6,12 @@ cask "friendlitronics-amp" do
   desc "Free audio plugin"
   homepage "https://github.com/Friendlitronics/friendlitronics-amp"
   depends_on :macos
-  artifact "FriendlitronicsAmp-0.8.0-macOS/Friendlitronics Amp.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    move "FriendlitronicsAmp-0.8.0-macOS/Friendlitronics Amp.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Friendlitronics Amp.vst3"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "FriendlitronicsAmp-0.8.0-macOS/Friendlitronics Amp.component", "{{user}}/Library/Audio/Plug-Ins/Components/Friendlitronics Amp.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/FriendlitronicsAmp-0.8.0-macOS"
+    copy "FriendlitronicsAmp-0.8.0-macOS/How to install.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/FriendlitronicsAmp-0.8.0-macOS/How to install.txt"
+  end
 end

@@ -1,11 +1,11 @@
 cask "abctrain" do
-  version "1.6.0"
-  sha256 "9ee2c81e81ad13313179c23fabb482c3c1e66b177f91d622082936bd95ab48a5"
-  url "https://github.com/bogggare567/abcTrain/releases/download/v1.6.0/abcTrain-macOS-1.6.0.dmg"
+  version "2.0.1"
+  sha256 "9c7773ac6fa49b68e53983bb4ed774207e3b62144cfdf0dcf432292daf529034"
+  url "https://github.com/bogggare567/abcTrain/releases/download/v2.0.1/abcTrain-macOS-2.0.1.dmg"
   name "abcTrain"
   desc "Free audio plugin"
   homepage "https://github.com/bogggare567/abcTrain"
   depends_on :macos
   container type: :dmg
-  pkg "abcTrain-1.6.0.pkg"
+  pkg "abcTrain-2.0.1.pkg"
 end

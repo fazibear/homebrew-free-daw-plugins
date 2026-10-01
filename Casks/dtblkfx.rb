@@ -9,5 +9,7 @@ cask "dtblkfx" do
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
     move "DtBlkFx.component", "{{user}}/Library/Audio/Plug-Ins/Components/DtBlkFx.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    move "DtBlkFx.component/Contents/Resources/plugin.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/plugin.vst3"
   end
 end
