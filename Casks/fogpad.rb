@@ -6,12 +6,7 @@ cask "fogpad" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/fogpad"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    copy "VST/fogpad.vst", "{{user}}/Library/Audio/Plug-Ins/VST/fogpad.vst", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "VST3/fogpad.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/fogpad.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "AU/Fogpad AUV3.app", "{{user}}/Applications/Fogpad AUV3.app", recursive: true
-  end
+  artifact "VST/fogpad.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/fogpad.vst"
+  artifact "VST3/fogpad.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/fogpad.vst3"
+  app "AU/Fogpad AUV3.app", target: "#{Dir.home}/Applications/Fogpad AUV3.app"
 end
