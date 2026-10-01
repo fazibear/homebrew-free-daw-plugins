@@ -234,8 +234,8 @@ def regenerate_action():
 
             base = metadata["baseRefName"]
             run("git", "fetch", "origin", base)
-            run("git", "reset", "--hard", f"origin/{base}")
-            run("gh", "pr", "checkout", str(number), "--repo", repo)
+            run("git", "fetch", "origin", f"refs/pull/{number}/head")
+            run("git", "checkout", "--detach", "FETCH_HEAD")
             try:
                 run("git", "rebase", f"origin/{base}")
             except Exception:
@@ -244,7 +244,8 @@ def regenerate_action():
             result = run("git", "diff", "--diff-filter=AM", "--name-only", f"origin/{base}...HEAD", "--", "Casks/*.rb", capture=True)
             files = [Path(line) for line in result.stdout.splitlines() if line]
             if not files:
-                raise RuntimeError(f"PR #{number}: no added or modified cask files found")
+                print(f"PR #{number}: already has no added or modified cask files after rebase")
+                continue
             for path in files:
                 if is_discovery:
                     candidate = candidate_for(path)
@@ -266,7 +267,7 @@ def regenerate_action():
             if changed:
                 run("git", "add", "--", *changed)
                 run("git", "commit", "-m", "Regenerate cask PR")
-                run("git", "push", "origin", branch)
+                run("git", "push", "origin", f"HEAD:refs/heads/{branch}")
             print(f"PR #{number}: {'regenerated' if is_discovery else 'updated'} ({len(changed)} changed cask file(s))")
         except Exception as error:
             failures.append((number, error))
