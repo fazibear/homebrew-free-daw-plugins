@@ -6,8 +6,5 @@ cask "furnace-chiptune" do
   desc "Free audio plugin"
   homepage "https://github.com/dthinkr/furnace-chiptune-plugin"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "FurnacePlugin.component", "{{user}}/Library/Audio/Plug-Ins/Components/FurnacePlugin.component", recursive: true
-  end
+  artifact "FurnacePlugin.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/FurnacePlugin.component"
 end
