@@ -261,13 +261,13 @@ def regenerate_action():
                         raise RuntimeError(f"{path}: {detail}")
                     print(f"PR #{number}: {path.stem}: {status}: {detail}")
             changed = run("git", "diff", "--name-only", "--diff-filter=AM", "--", "Casks/*.rb", capture=True).stdout.splitlines()
-            for path in changed:
-                run("ruby", "-c", path)
-            if run("git", "diff", "--quiet", "--", "Casks", check=False).returncode:
-                run("git", "add", "--", "Casks")
-                run("git", "commit", "-m", "Regenerate discovery casks")
+            for filename in files:
+                run("ruby", "-c", filename)
+            if changed:
+                run("git", "add", "--", *changed)
+                run("git", "commit", "-m", "Regenerate cask PR")
                 run("git", "push", "--force-with-lease", "origin", branch)
-            print(f"PR #{number}: {'regenerated' if is_discovery else 'updated'}")
+            print(f"PR #{number}: {'regenerated' if is_discovery else 'updated'} ({len(changed)} changed cask file(s))")
         except Exception as error:
             failures.append((number, error))
             print(f"PR #{number}: failed: {error}", file=sys.stderr)
