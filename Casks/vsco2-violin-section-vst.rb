@@ -6,5 +6,8 @@ cask "vsco2-violin-section-vst" do
   desc "VSCO2 Violin Section is a sampled violin section ."
   homepage "https://plugins4free.com/plugin/2539"
   depends_on :macos
-  artifact "VSCO2 Violin Section.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "VSCO2 Violin Section.vst", "{{user}}/Library/Audio/Plug-Ins/VST/VSCO2 Violin Section.vst"
+  end
 end
