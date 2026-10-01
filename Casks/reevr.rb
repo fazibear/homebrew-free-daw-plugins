@@ -8,10 +8,10 @@ cask "reevr" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "reevr-macos/AU/REEV-R.component", "{{user}}/Library/Audio/Plug-Ins/Components/REEV-R.component"
+    copy "reevr-macos/AU/REEV-R.component", "{{user}}/Library/Audio/Plug-Ins/Components/REEV-R.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/LV2"
-    move "reevr-macos/LV2/REEV-R.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/REEV-R.lv2"
+    copy "reevr-macos/LV2/REEV-R.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/REEV-R.lv2", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "reevr-macos/VST3/REEV-R.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/REEV-R.vst3"
+    copy "reevr-macos/VST3/REEV-R.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/REEV-R.vst3", recursive: true
   end
 end
