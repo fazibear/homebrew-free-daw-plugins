@@ -6,5 +6,8 @@ cask "iowa-tenor-trombone-au" do
   desc "Iowa Tenor Trombone is a sampled tenor trombone from the University of Iowa Electronic Music Studios."
   homepage "https://plugins4free.com/plugin/2420"
   depends_on :macos
-  artifact "Iowa Tenor Trombone.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Iowa Tenor Trombone.component", "{{user}}/Library/Audio/Plug-Ins/Components/Iowa Tenor Trombone.component"
+  end
 end

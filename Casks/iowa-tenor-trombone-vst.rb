@@ -6,5 +6,8 @@ cask "iowa-tenor-trombone-vst" do
   desc "Iowa Tenor Trombone is a sampled tenor trombone from the University of Iowa Electronic Music Studios."
   homepage "https://plugins4free.com/plugin/2420"
   depends_on :macos
-  artifact "Iowa Tenor Trombone.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Iowa Tenor Trombone.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Iowa Tenor Trombone.vst"
+  end
 end
