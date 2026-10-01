@@ -161,7 +161,7 @@ def run_discovery_action(source):
         )
 
 
-def update_action():
+def update_action(*, all_casks=False):
     from .cask_utils import stanza
     from .update_casks import update
 
@@ -173,7 +173,7 @@ def update_action():
         version = stanza(source, "version")
         homepage = stanza(source, "homepage") or ""
         url = stanza(source, "url") or ""
-        if not version or version == "latest" or not homepage.startswith("https://github.com/") or "github.com/" not in url:
+        if not all_casks and (not version or version == "latest" or not homepage.startswith("https://github.com/") or "github.com/" not in url):
             continue
         token = path.stem
         for suffix in ("-vst3", "-vst", "-au", "-clap", "-lv2", "-aax"):
@@ -189,7 +189,7 @@ def update_action():
         changed = []
         for path in paths:
             try:
-                status, detail = update(path)
+                status, detail = update(path, all_casks=all_casks)
             except Exception as error:
                 status, detail = "error", str(error)
             print(f"{path.stem}: {status}: {detail}")
@@ -215,7 +215,8 @@ def update_action():
             old_version = stanza(old, "version")
             new_version = stanza(path.read_text(), "version")
             entries.append(f"- {path.stem}: {old_version} → {new_version}")
-        body = "Automated update check for versioned casks using their GitHub Releases.\n\nUpdated casks:\n" + "\n".join(entries) + "\n\nPlease review the updated versions, download URLs, and checksums."
+        scope = "all casks using the shared archive renderer" if all_casks else "versioned casks using their GitHub Releases"
+        body = f"Automated update check for {scope}.\n\nUpdated casks:\n" + "\n".join(entries) + "\n\nPlease review the updated versions, download URLs, and checksums."
         open_pr = _open_pr(branch)
         if open_pr:
             gh("pr", "edit", str(open_pr), "--repo", repo, "--title", title, "--body", body)
@@ -280,7 +281,7 @@ def regenerate_action():
                         content = preserve_cask_token(content, path.stem)
                     path.write_text(content)
                 else:
-                    status, detail = update(path, regenerate=True)
+                    status, detail = update(path, regenerate=True, all_casks=True)
                     if status not in {"updated", "current"}:
                         raise RuntimeError(f"{path}: {detail}")
                     print(f"PR #{number}: {path.stem}: {status}: {detail}")

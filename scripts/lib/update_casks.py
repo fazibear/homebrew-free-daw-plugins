@@ -58,7 +58,38 @@ def release_asset(release, old_url):
     return assets[0] if assets else None
 
 
-def update(path, *, regenerate=False):
+def update_download(path):
+    """Regenerate non-versioned and non-GitHub casks with the shared renderer."""
+    source = path.read_text()
+    homepage = stanza(source, "homepage", required=True)
+    if re.fullmatch(r"https://(?:www\.)?plugins4free\.com/plugin/[A-Za-z0-9_-]+/?", homepage):
+        from .regenerate_casks import candidate_for
+        candidate = candidate_for(path)
+    else:
+        version = stanza(source, "version") or "latest"
+        url = stanza(source, "url", required=True).replace("#{version}", version)
+        if "#{" in url:
+            return "skip", "unsupported URL interpolation"
+        filename = Path(urllib.parse.unquote(urllib.parse.urlparse(url).path)).name
+        if not filename.lower().endswith((".zip", ".dmg", ".pkg")):
+            return "skip", "download URL has no supported archive or installer filename"
+        candidate = {
+            "name": stanza(source, "name", required=True),
+            "description": stanza(source, "desc", required=True),
+            "homepage": homepage, "url": url, "filename": filename,
+            "version": version, "digest": stanza(source, "sha256") or "",
+        }
+    token, content = render(candidate)
+    if not token or not content:
+        return "skip", "download contains no supported plugin, app, or package"
+    content = preserve_cask_token(content, path.stem)
+    if content == source:
+        return "current", "shared renderer produces no cask change"
+    path.write_text(content)
+    return "updated", f"regenerated from {candidate['filename']}"
+
+
+def update(path, *, regenerate=False, all_casks=False):
     source = path.read_text()
     current = stanza(source, "version")
     homepage = stanza(source, "homepage")
@@ -66,6 +97,10 @@ def update(path, *, regenerate=False):
     name = stanza(source, "name")
     description = stanza(source, "desc")
     repository = github_repository(homepage or "")
+    if all_casks and (
+        not current or current == "latest" or not repository or "github.com/" not in (old_url or "")
+    ):
+        return update_download(path)
     if not current or current == "latest":
         return "skip", "version is latest or missing"
     if not repository or "github.com/" not in (old_url or ""):
@@ -76,6 +111,8 @@ def update(path, *, regenerate=False):
     if not latest:
         return "skip", "GitHub returned no latest release tag"
     if version_numbers(current) is None or version_numbers(latest) is None:
+        if all_casks:
+            return update_download(path)
         return "skip", f"could not compare versions current={current}, latest={latest}"
     if newer_version(latest, current) and not regenerate:
         return "current", f"current version {current} is newer than release tag {latest}"
@@ -102,7 +139,7 @@ def update(path, *, regenerate=False):
         return "skip", f"could not generate a cask from release asset {asset['name']}"
     if token != path.stem:
         format_tokens = {f"{token}-{suffix}" for suffix in ("au", "vst", "vst3", "clap", "lv2")}
-        if path.stem not in format_tokens:
+        if not all_casks and path.stem not in format_tokens:
             return "skip", f"generated cask token {token} differs from existing token {path.stem}"
         try:
             content = preserve_cask_token(content, path.stem)
