@@ -6,12 +6,7 @@ cask "intersect" do
   desc "Free audio plugin"
   homepage "https://github.com/tucktuckg00se/INTERSECT"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "INTERSECT.component", "{{user}}/Library/Audio/Plug-Ins/Components/INTERSECT.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "INTERSECT.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/INTERSECT.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "INTERSECT.app", "{{user}}/Applications/INTERSECT.app", recursive: true
-  end
+  artifact "INTERSECT.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/INTERSECT.component"
+  artifact "INTERSECT.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/INTERSECT.vst3"
+  app "INTERSECT.app", target: "#{Dir.home}/Applications/INTERSECT.app"
 end
