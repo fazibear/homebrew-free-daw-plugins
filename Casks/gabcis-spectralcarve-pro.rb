@@ -8,6 +8,6 @@ cask "gabcis-spectralcarve-pro" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "SpectralCarve Pro.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/SpectralCarve Pro.vst3"
+    copy "SpectralCarve Pro.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/SpectralCarve Pro.vst3", recursive: true
   end
 end
