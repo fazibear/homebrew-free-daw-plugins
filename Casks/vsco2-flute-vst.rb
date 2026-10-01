@@ -6,5 +6,8 @@ cask "vsco2-flute-vst" do
   desc "VSCO2 Flute is a sampled flute ."
   homepage "https://plugins4free.com/plugin/2721"
   depends_on :macos
-  artifact "VSCO2 Flute.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "VSCO2 Flute.vst", "{{user}}/Library/Audio/Plug-Ins/VST/VSCO2 Flute.vst"
+  end
 end
