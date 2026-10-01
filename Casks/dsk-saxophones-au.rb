@@ -6,5 +6,10 @@ cask "dsk-saxophones-au" do
   desc "DSK Saxophones is a Soprano and Tenor sax rompler."
   homepage "https://plugins4free.com/plugin/2160"
   depends_on :macos
-  artifact "DSK Saxophones - macAU/DSK Saxophones.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "DSK Saxophones - macAU/DSK Saxophones.component", "{{user}}/Library/Audio/Plug-Ins/Components/DSK Saxophones.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    copy "DSK Saxophones - macAU/DSK Music - Readme.txt", "{{user}}/Library/Audio/Plug-Ins/Components/DSK Music - Readme.txt"
+  end
 end
