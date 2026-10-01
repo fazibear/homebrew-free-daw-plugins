@@ -1,7 +1,7 @@
 cask "abpl-ii-vst" do
   version "latest"
   sha256 :no_check
-  url "https://alt1.plugins4free.com/get_plug/ABPL_2_3_1_Complete_Installer.dmg"
+  url "https://plugins4free.com/get_plug/ABPL_2_3_1_Complete_Installer.dmg"
   name "ABPL II"
   desc "Ample Bass P Lite II (ABPL) is a free lite version of ABP, recorded on a Fender Precision Bass ."
   homepage "https://plugins4free.com/plugin/2505"
