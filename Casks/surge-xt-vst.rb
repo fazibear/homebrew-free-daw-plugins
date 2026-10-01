@@ -6,5 +6,6 @@ cask "surge-xt-vst" do
   desc "Surge XT is a subtractive hybrid synthesizer ."
   homepage "https://plugins4free.com/plugin/3680"
   depends_on :macos
-  dmg "surge-xt-macOS-1.1.1.dmg"
+  container type: :dmg
+  pkg "surge-xt-macOS-1.1.1.pkg"
 end
