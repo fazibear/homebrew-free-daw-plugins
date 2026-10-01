@@ -8,6 +8,6 @@ cask "boombaby" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "BoomBaby.component", "{{user}}/Library/Audio/Plug-Ins/Components/BoomBaby.component"
+    copy "BoomBaby.component", "{{user}}/Library/Audio/Plug-Ins/Components/BoomBaby.component", recursive: true
   end
 end
