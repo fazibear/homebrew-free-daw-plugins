@@ -25,6 +25,23 @@ THREAD_SLUG = re.compile(r"^df[a-z]{3}\d{2}$", re.I)
 CASKS = Path(__file__).resolve().parents[2] / "Casks"
 
 
+def response_diagnostics(envelope):
+    """Describe an HTTP failure without logging cookies or challenge tokens."""
+    allowed_headers = {"server", "content-type", "cf-mitigated", "cf-ray", "retry-after"}
+    details = []
+    for header in envelope.get("headers", []):
+        name = header.get("name", "").lower()
+        if name in allowed_headers:
+            details.append(f"{name}={header.get('value', '')}")
+    content = envelope.get("content") or ""
+    title = re.search(r"<title\b[^>]*>(.*?)</title>", content, re.I | re.S)
+    if title:
+        details.append(f"title={html.unescape(re.sub(r'<[^>]+>', '', title[1]))[:200]}")
+    if envelope.get("error"):
+        details.append(f"error={envelope['error']}")
+    return re.sub(r"\s+", " ", "; ".join(details)).strip()
+
+
 def fetch(url):
     """Fetch a JSON response."""
     if shutil.which("lightpanda"):
@@ -38,7 +55,11 @@ def fetch(url):
             raise RuntimeError(f"Lightpanda returned invalid JSON for {url}") from error
         status = envelope.get("http_status", 0)
         if status >= 400:
-            raise RuntimeError(f"Lightpanda received HTTP {status} for {url}")
+            details = response_diagnostics(envelope)
+            raise RuntimeError(
+                f"Lightpanda received HTTP {status} for {url}"
+                + (f" ({details})" if details else "")
+            )
         if envelope.get("error"):
             raise RuntimeError(f"Lightpanda could not fetch {url}: {envelope['error']}")
         response = envelope.get("content", "")
