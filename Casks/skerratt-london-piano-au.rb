@@ -6,5 +6,8 @@ cask "skerratt-london-piano-au" do
   desc "Skerratt London Piano is a sampled upright piano ."
   homepage "https://plugins4free.com/plugin/2295"
   depends_on :macos
-  artifact "Skerratt London Piano.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Skerratt London Piano.component", "{{user}}/Library/Audio/Plug-Ins/Components/Skerratt London Piano.component"
+  end
 end
