@@ -6,12 +6,7 @@ cask "delta-zero" do
   desc "Free audio plugin"
   homepage "https://github.com/nabsei/delta-zero"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "Delta Zero.component", "{{user}}/Library/Audio/Plug-Ins/Components/Delta Zero.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "Delta Zero.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Delta Zero.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "Delta Zero.app", "{{user}}/Applications/Delta Zero.app", recursive: true
-  end
+  artifact "Delta Zero.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Delta Zero.component"
+  artifact "Delta Zero.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/Delta Zero.vst3"
+  app "Delta Zero.app", target: "#{Dir.home}/Applications/Delta Zero.app"
 end
