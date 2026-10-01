@@ -6,5 +6,14 @@ cask "808-bass-module-2-lite-vst" do
   desc "808 Bass Module 2 Lite is a 808 bass ROMpler ."
   homepage "https://plugins4free.com/plugin/2709"
   depends_on :macos
-  artifact "808 Bass Module 2 Lite v2.0 MAC VST/808 BM2 lite.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "808 Bass Module 2 Lite v2.0 MAC VST/808 BM2 lite.vst", "{{user}}/Library/Audio/Plug-Ins/VST/808 BM2 lite.vst"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    copy "808 Bass Module 2 Lite v2.0 MAC VST/808 Bass Module 2 Lite.pdf", "{{user}}/Library/Audio/Plug-Ins/VST/808 Bass Module 2 Lite.pdf"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    copy "808 Bass Module 2 Lite v2.0 MAC VST/808 Bass Module 2 Lite.PNG", "{{user}}/Library/Audio/Plug-Ins/VST/808 Bass Module 2 Lite.PNG"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    copy "808 Bass Module 2 Lite v2.0 MAC VST/BeatMaker.URL", "{{user}}/Library/Audio/Plug-Ins/VST/BeatMaker.URL"
+  end
 end
