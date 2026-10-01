@@ -6,5 +6,8 @@ cask "musyng-kite-standard-drums-vst" do
   desc "Musyng Kite Standard Drums is a general MIDI drum kit ."
   homepage "https://plugins4free.com/plugin/2318"
   depends_on :macos
-  artifact "Musyng Kite Standard Drums.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Musyng Kite Standard Drums.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Musyng Kite Standard Drums.vst"
+  end
 end
