@@ -206,6 +206,7 @@ def regenerate_action():
     from .create_casks import archive_members, render
     from .cask_utils import preserve_cask_token, stanza
     from .update_casks import update
+    configure_git()
     repo = repo_env()
     gh_token = os.environ.get("GH_TOKEN")
     bot = os.environ.get("BOT_LOGIN")
@@ -232,9 +233,9 @@ def regenerate_action():
             if not (is_discovery or is_update) or metadata.get("headRepository", {}).get("nameWithOwner") != repo or metadata.get("author", {}).get("login") != bot or not any(l.get("name") == "automation" for l in metadata.get("labels", [])):
                 raise RuntimeError(f"PR #{number} failed automation cask PR validation")
 
-            base = metadata["baseRefName"]
-            run("git", "fetch", "origin", f"+refs/pull/{number}/head:refs/remotes/origin/pr-{number}")
-            run("git", "checkout", "-B", branch, f"refs/remotes/origin/pr-{number}")
+            run("git", "fetch", "origin", f"refs/heads/{branch}:refs/remotes/origin/{branch}")
+            run("git", "checkout", "-B", branch, f"origin/{branch}")
+            run("git", "branch", "--set-upstream-to", f"origin/{branch}", branch)
             cask_token = branch.removeprefix("automation/discovered-plugins4free-").removeprefix("automation/discovered-github-").removeprefix("automation/cask-updates-")
             files = [Path("Casks") / f"{cask_token}.rb"]
             if not files[0].is_file():
@@ -257,17 +258,17 @@ def regenerate_action():
                     path.write_text(content)
                 else:
                     status, detail = update(path, regenerate=True)
-                    if status != "updated":
+                    if status not in {"updated", "current"}:
                         raise RuntimeError(f"{path}: {detail}")
                     print(f"PR #{number}: {path.stem}: {status}: {detail}")
-            changed = run("git", "diff", "--name-only", "--diff-filter=AM", "--", "Casks/*.rb", capture=True).stdout.splitlines()
             for filename in files:
                 run("ruby", "-c", filename)
+            run("git", "add", "--", *(str(path) for path in files))
+            changed = run("git", "diff", "--cached", "--name-only", "--", *(str(path) for path in files), capture=True).stdout.splitlines()
             if changed:
-                run("git", "add", "--", *changed)
                 run("git", "commit", "-m", "Regenerate cask PR")
                 run("git", "push", "origin", f"HEAD:refs/heads/{branch}")
-            print(f"PR #{number}: {'regenerated' if is_discovery else 'updated'} ({len(changed)} changed cask file(s))")
+            print(f"PR #{number}: {'committed and pushed' if changed else 'generated cask matches PR branch'} ({len(changed)} changed cask file(s))")
         except Exception as error:
             failures.append((number, error))
             print(f"PR #{number}: failed: {error}", file=sys.stderr)

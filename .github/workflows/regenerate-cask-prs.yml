@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "Optional PR number; leave blank to regenerate all open discovery cask PRs"
+        description: "Optional PR number; leave blank to regenerate all open automation cask PRs"
         required: false
         type: number
 
@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.CASK_BOT_TOKEN }}
-      - name: Rebase and regenerate open discovery pull requests
+      - name: Regenerate open automation cask pull requests
         env:
           GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
