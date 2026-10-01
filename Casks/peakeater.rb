@@ -9,12 +9,12 @@ cask "peakeater" do
   container type: :dmg
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
-    move "peakeater.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/peakeater.clap"
+    copy "peakeater.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/peakeater.clap", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "peakeater.component", "{{user}}/Library/Audio/Plug-Ins/Components/peakeater.component"
+    copy "peakeater.component", "{{user}}/Library/Audio/Plug-Ins/Components/peakeater.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/LV2"
-    move "peakeater.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/peakeater.lv2"
+    copy "peakeater.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/peakeater.lv2", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "peakeater.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/peakeater.vst3"
+    copy "peakeater.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/peakeater.vst3", recursive: true
   end
 end
