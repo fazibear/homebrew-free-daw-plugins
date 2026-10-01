@@ -41,19 +41,33 @@ def archive_members(candidate):
             archive.write(data)
             archive.flush()
             with zipfile.ZipFile(archive.name) as zipped:
-                members = [item for item in zipped.infolist() if not item.is_dir()]
-                names = [item.filename for item in members]
+                entries = [(item.filename.rstrip("/"), item.is_dir()) for item in zipped.infolist() if item.filename.rstrip("/")]
+        names = [name for name, is_dir in entries if not is_dir]
         formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
         suffixes = formats.get(candidate.get("format"), (".pkg", ".vst3", ".vst", ".component", ".clap"))
-        member = next((name for name in names if name.lower().endswith(suffixes)), None)
+        bundle_roots = [name for name, is_dir in entries if is_dir and name.lower().endswith(suffixes)]
+        for name, _ in entries:
+            parts = name.split("/")
+            for index, part in enumerate(parts):
+                if part.lower().endswith(suffixes):
+                    root = "/".join(parts[:index + 1])
+                    if root not in bundle_roots:
+                        bundle_roots.append(root)
+        member = next((root for root in bundle_roots if root.lower().endswith(suffixes)), None)
+        if member is None:
+            member = next((name for name in names if name.lower().endswith(suffixes)), None)
         if member:
-            # VST2/legacy sampler archives commonly keep sample data beside the
-            # plugin binary. Preserve those siblings instead of installing only
-            # the bundle and producing a plugin that cannot find its content.
+            # AU/VST bundles are directories in ZIP archives. Preserve files
+            # beside the bundle, while moving the bundle carries its contents.
             parent = str(Path(member).parent)
             prefix = f"{parent}/" if parent != "." else ""
-            related = [name for name in names if name == member or (prefix and name.startswith(prefix))]
-            print(f"Cask generator: {candidate['filename']} contains {member} and {len(related) - 1} sibling file(s)", file=sys.stderr)
+            related = [
+                name for name in names
+                if name != member
+                and (name.startswith(prefix) if prefix else True)
+                and not name.startswith(f"{member}/")
+            ]
+            print(f"Cask generator: {candidate['filename']} contains {member} and {len(related)} sibling file(s)", file=sys.stderr)
         else:
             print(f"Cask generator: no {candidate.get('format', 'plugin')} bundle found in {candidate['filename']}", file=sys.stderr)
         return (member, related, prefix) if member else None
