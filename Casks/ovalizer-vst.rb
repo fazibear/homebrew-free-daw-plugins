@@ -6,5 +6,8 @@ cask "ovalizer-vst" do
   desc "Ovalizer is a digital glitch emulator using live audio source or WAV files."
   homepage "https://plugins4free.com/plugin/2938"
   depends_on :macos
-  artifact "Ovalizer.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Ovalizer.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Ovalizer.vst"
+  end
 end
