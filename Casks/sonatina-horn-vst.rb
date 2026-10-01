@@ -6,5 +6,8 @@ cask "sonatina-horn-vst" do
   desc "Sonatina Horn is a sampled horn ."
   homepage "https://plugins4free.com/plugin/2307"
   depends_on :macos
-  artifact "Sonatina Horn.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Horn.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Horn.vst"
+  end
 end
