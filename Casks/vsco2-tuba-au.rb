@@ -6,5 +6,8 @@ cask "vsco2-tuba-au" do
   desc "VSCO2 Tuba is a sampled tuba ."
   homepage "https://plugins4free.com/plugin/2558"
   depends_on :macos
-  artifact "VSCO2 Tuba.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "VSCO2 Tuba.component", "{{user}}/Library/Audio/Plug-Ins/Components/VSCO2 Tuba.component"
+  end
 end
