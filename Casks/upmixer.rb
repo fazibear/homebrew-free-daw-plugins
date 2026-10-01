@@ -1,0 +1,33 @@
+cask "upmixer" do
+  version "1.0.0"
+  sha256 "203546bfe0eb19ae0b1261a8c72676e67c21d7f04ad1043b433d2d1abc123d5b"
+  url "https://github.com/qutschwalze/Upmixer/releases/download/v1.0.0/Upmixer_Mac.zip"
+  name "Upmixer"
+  desc "Free audio plugin"
+  homepage "https://github.com/qutschwalze/Upmixer"
+  depends_on :macos
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Upmixer.component", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.appex/Contents"
+    copy "Upmixer.appex/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.appex/Contents/Info.plist"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.appex/Contents/_CodeSignature"
+    copy "Upmixer.appex/Contents/_CodeSignature/CodeResources", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.appex/Contents/_CodeSignature/CodeResources"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.appex/Contents/MacOS"
+    copy "Upmixer.appex/Contents/MacOS/Upmixer", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.appex/Contents/MacOS/Upmixer"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.appex/Contents/Resources"
+    copy "Upmixer.appex/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.appex/Contents/Resources/RecentFilesMenuTemplate.nib"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents"
+    copy "Upmixer.vst3/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/Info.plist"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents"
+    copy "Upmixer.vst3/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/PkgInfo"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/_CodeSignature"
+    copy "Upmixer.vst3/Contents/_CodeSignature/CodeResources", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/_CodeSignature/CodeResources"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/MacOS"
+    copy "Upmixer.vst3/Contents/MacOS/Upmixer", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/MacOS/Upmixer"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/Resources"
+    copy "Upmixer.vst3/Contents/Resources/moduleinfo.json", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/Resources/moduleinfo.json"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/Resources"
+    copy "Upmixer.vst3/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Components/Upmixer.vst3/Contents/Resources/RecentFilesMenuTemplate.nib"
+  end
+end
