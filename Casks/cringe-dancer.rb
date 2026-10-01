@@ -7,9 +7,5 @@ cask "cringe-dancer" do
   homepage "https://github.com/alexlarichev/cringe-dancer-releases"
   depends_on :macos
   container type: :dmg
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "CringeDancer-1.0.0-mac.dmg.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/CringeDancer-1.0.0-mac.dmg.vst3", recursive: true
-    system_command "installer", args: ["-pkg", "#staged_path/#Install Cringe Dancer.pkg", "-target", "/"]
-  end
+  pkg "Install Cringe Dancer.pkg"
 end
