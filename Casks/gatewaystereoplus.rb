@@ -8,8 +8,8 @@ cask "gatewaystereoplus" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "GatewayStereoPlus-macOS-arm64/GatewayStereoPlus.component", "{{user}}/Library/Audio/Plug-Ins/Components/GatewayStereoPlus.component"
+    copy "GatewayStereoPlus-macOS-arm64/GatewayStereoPlus.component", "{{user}}/Library/Audio/Plug-Ins/Components/GatewayStereoPlus.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "GatewayStereoPlus-macOS-arm64/GatewayStereoPlus.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/GatewayStereoPlus.vst3"
+    copy "GatewayStereoPlus-macOS-arm64/GatewayStereoPlus.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/GatewayStereoPlus.vst3", recursive: true
   end
 end
