@@ -8,6 +8,6 @@ cask "gabcis-smartmask-network" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "SmartMask Network.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/SmartMask Network.vst3"
+    copy "SmartMask Network.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/SmartMask Network.vst3", recursive: true
   end
 end
