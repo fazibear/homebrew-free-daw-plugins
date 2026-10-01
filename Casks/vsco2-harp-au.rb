@@ -6,5 +6,8 @@ cask "vsco2-harp-au" do
   desc "VSCO2 Harp is a sampled harp ."
   homepage "https://plugins4free.com/plugin/2554"
   depends_on :macos
-  artifact "VSCO2 Harp.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "VSCO2 Harp.component", "{{user}}/Library/Audio/Plug-Ins/Components/VSCO2 Harp.component"
+  end
 end
