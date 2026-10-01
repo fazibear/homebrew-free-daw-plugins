@@ -107,19 +107,9 @@ def archive_members(candidate, *, strict=False):
                         root = "/".join(parts[:index + 1])
                         if root not in bundle_roots:
                             bundle_roots.append(root)
-        member = next((root for root in bundle_roots if root.lower().endswith(".pkg")), None)
-        if member is None:
-            member = next((root for root in bundle_roots if root.lower().endswith(suffixes)), None)
-        if member is None:
-            member = next((root for root in bundle_roots if root.lower().endswith(all_suffixes)), None)
-        if member is None and app_suffixes:
-            member = next((root for root in bundle_roots if root.lower().endswith(app_suffixes)), None)
-        if member is None:
+        if not bundle_roots:
             print(f"Cask generator: no {candidate.get('format', 'plugin')} bundle found in {candidate['filename']}", file=sys.stderr)
             return None
-
-        if member.lower().endswith((".pkg", ".app")):
-            return (member, [], str(Path(member).parent), None)
 
         # Keep top-level bundles as artifacts. A format bundle nested inside
         # an app or another plugin bundle belongs to that outer bundle.
@@ -135,15 +125,13 @@ def archive_members(candidate, *, strict=False):
                 outermost_bundles.append(root)
         bundle_paths = [root for root in outermost_bundles if root.lower().endswith(all_suffixes)]
         app_paths = [root for root in outermost_bundles if root.lower().endswith(".app")]
-        if not bundle_paths and app_paths:
-            app_bundle = app_paths[0]
-            return (app_bundle, [], str(Path(app_bundle).parent), None)
+        package_paths = [root for root in bundle_roots if root.lower().endswith(".pkg")]
         print(
             f"Cask generator: {candidate['filename']} contains {len(bundle_paths)} plugin bundle(s) "
-            f"and {len(app_paths)} app bundle(s)",
+            f"{len(app_paths)} app bundle(s) and {len(package_paths)} package(s)",
             file=sys.stderr,
         )
-        return {"bundles": bundle_paths, "apps": app_paths}
+        return {"bundles": bundle_paths, "apps": app_paths, "packages": package_paths}
     except Exception as error:
         message = f"could not inspect {candidate['filename']}: {error}"
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:
@@ -180,13 +168,12 @@ def render(candidate):
         else:
             bundles = archive.get("bundles", [])
             apps = archive.get("apps", [])
-            bundle = bundles[0] if bundles else ""
-        if bundle.lower().endswith(".pkg"):
+            packages = archive.get("packages", [])
+            bundle = bundles[0] if bundles else (apps[0] if apps else (packages[0] if packages else ""))
+        if bundle.lower().endswith(".pkg") and filename.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
-        elif bundle.lower().endswith(".app"):
+        elif bundle.lower().endswith(".app") and not bundles and not packages:
             install = f'  app "{bundle}"'
-        elif bundle.lower().endswith(".dmg"):
-            install = f'  dmg "{bundle}"'
         else:
             if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
                 name = f"{slug(display)}-{candidate['format'].lower()}"
@@ -202,12 +189,12 @@ def render(candidate):
                 bundle_target = f"{plugin_dir}/{Path(plugin_bundle).name}"
                 install += f'    mkdir_p "{{{{user}}}}/{plugin_dir}"\n'
                 install += f'    copy "{plugin_bundle}", "{{{{user}}}}/{bundle_target}", recursive: true\n'
-
             for app_bundle in apps:
                 app_target = f"Applications/{Path(app_bundle).name}"
                 install += f'    mkdir_p "{{{{user}}}}/Applications"\n'
                 install += f'    copy "{app_bundle}", "{{{{user}}}}/{app_target}", recursive: true\n'
-
+            for package in packages:
+                install += f'    system_command "installer", args: ["-pkg", "#{"staged_path"}/#{package}", "-target", "/"]\n'
             install += "  end"
     container = "  container type: :dmg\n" if filename.lower().endswith(".dmg") else ""
     return name, f'''cask "{name}" do
