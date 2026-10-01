@@ -7,6 +7,16 @@ import urllib.parse
 
 from cask_utils import github_json
 
+MACOS_ASSET_MARKERS = ("mac", "macos", "darwin", "osx", "universal")
+
+
+def is_macos_asset(name):
+    name = name.lower()
+    if name.endswith((".pkg", ".dmg")):
+        return True
+    return name.endswith(".zip") and any(marker in name for marker in MACOS_ASSET_MARKERS)
+
+
 def candidate_from_repository(repo):
     print(f"GitHub: checking {repo['full_name']}", file=sys.stderr)
     try:
@@ -14,9 +24,7 @@ def candidate_from_repository(repo):
     except Exception:
         print(f"GitHub: no accessible latest release for {repo['full_name']}", file=sys.stderr)
         return None
-    assets = [asset for asset in release.get("assets", [])
-              if any(x in asset["name"].lower() for x in ("mac", "macos", "darwin", "osx", "universal"))
-              and asset["name"].lower().endswith((".pkg", ".dmg", ".zip"))]
+    assets = [asset for asset in release.get("assets", []) if is_macos_asset(asset["name"])]
     if not assets:
         print(f"GitHub: no macOS installer for {repo['full_name']}", file=sys.stderr)
         return None
