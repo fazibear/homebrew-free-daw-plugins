@@ -6,5 +6,10 @@ cask "vst-speek-au" do
   desc "VST Speek is a speech software synthesizer : it reads the text you type in the text field."
   homepage "https://plugins4free.com/plugin/1863"
   depends_on :macos
-  artifact "AUSpeek3-x64/__MACOSX/._AUSpeek3.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "AUSpeek3-x64/__MACOSX/._AUSpeek3.component", "{{user}}/Library/Audio/Plug-Ins/Components/._AUSpeek3.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"
+    copy "AUSpeek3-x64/__MACOSX/AUSpeek3.component/._Icon", "{{user}}/Library/Audio/Plug-Ins/Components/AUSpeek3.component/._Icon"
+  end
 end
