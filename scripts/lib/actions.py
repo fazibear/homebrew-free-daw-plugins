@@ -109,10 +109,10 @@ def publish_discovery(source, paths):
                 "Please review licensing, checksum, installer behavior, and Homebrew policy.",
             ])
         if open_pr:
-            gh("pr", "edit", str(open_pr), "--repo", repo, "--title", title, "--body", body, token=token)
+            gh("pr", "edit", str(open_pr), "--repo", repo, "--title", title, "--body", body, token=gh_token)
         else:
             gh("pr", "create", "--base", base_branch(), "--head", branch, "--title", title,
-               "--body", body, "--label", "automation", "--repo", repo, token=token)
+               "--body", body, "--label", "automation", "--repo", repo, token=gh_token)
 
 
 def run_discovery_action(source):

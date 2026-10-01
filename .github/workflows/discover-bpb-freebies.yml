@@ -24,7 +24,3 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
         run: python3 scripts/discover_bpb_freebies.py
-      - name: Diagnose BPB HTTP failures
-        if: failure()
-        timeout-minutes: 7
-        run: python3 scripts/debug_bpb.py
