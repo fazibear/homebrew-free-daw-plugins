@@ -58,7 +58,9 @@ jobs:
           fi
 
           total_prs=${#pr_numbers[@]}
-          printf 'PRs to regenerate: #%s\n' "$(IFS=', #'; echo "${pr_numbers[*]}")"
+          printf 'PRs to regenerate:'
+          for pr_number in "${pr_numbers[@]}"; do printf ' #%s' "$pr_number"; done
+          printf '\n'
 
           regenerate_one() {
             local pr_number="$1"
@@ -78,7 +80,7 @@ jobs:
             [[ "$author" == "$BOT_LOGIN" ]] || return 1
             [[ "$has_label" == true ]] || return 1
 
-            printf '\n\n\nRegenerating PR #%s (%d/%d)\n' "$pr_number" "$position" "$total"
+            printf '\n--- Regenerating PR #%s (%d/%d) ---\n' "$pr_number" "$position" "$total"
             echo "  Rebasing onto $base_ref..."
             gh pr checkout "$pr_number" --repo "$REPOSITORY" || return 1
             original_head="$(git rev-parse HEAD)" || return 1
