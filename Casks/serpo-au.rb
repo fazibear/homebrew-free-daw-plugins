@@ -6,5 +6,8 @@ cask "serpo-au" do
   desc "Serpo is an extremely simple to use free virtual instrument packed with original sounds recorded by artist from all over the world ."
   homepage "https://plugins4free.com/plugin/2567"
   depends_on :macos
-  artifact "Serpo - Mac - Audio Unit/Serpo.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Serpo - Mac - Audio Unit/Serpo.component", "{{user}}/Library/Audio/Plug-Ins/Components/Serpo.component"
+  end
 end
