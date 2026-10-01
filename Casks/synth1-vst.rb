@@ -6,5 +6,8 @@ cask "synth1-vst" do
   desc "Synth1 is modelled on the Clavia Nord Lead 2 Red Synth."
   homepage "https://plugins4free.com/plugin/245"
   depends_on :macos
-  artifact "Synth1.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Synth1.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Synth1.vst"
+  end
 end
