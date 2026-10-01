@@ -1,7 +1,7 @@
 cask "sequencair-vst" do
   version "latest"
   sha256 :no_check
-  url "https://alt1.plugins4free.com/get_plug/sequencair_1_1_9_mac.pkg"
+  url "https://plugins4free.com/get_plug/sequencair_1_1_9_mac.pkg"
   name "SequencAir"
   desc "SequencAir is a step sequencer/synthesizer ."
   homepage "https://plugins4free.com/plugin/3006"
