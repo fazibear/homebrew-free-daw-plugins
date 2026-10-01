@@ -6,5 +6,8 @@ cask "vsco2-oboe-au" do
   desc "VSCO2 Oboe is a sampled oboe ."
   homepage "https://plugins4free.com/plugin/2724"
   depends_on :macos
-  artifact "VSCO2 Oboe.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "VSCO2 Oboe.component", "{{user}}/Library/Audio/Plug-Ins/Components/VSCO2 Oboe.component"
+  end
 end
