@@ -6,16 +6,9 @@ cask "jc303" do
   desc "Free audio plugin"
   homepage "https://github.com/midilab/jc303"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "JC-303_MacOS_Universal-0.13.0/AU/JC303.component", "{{user}}/Library/Audio/Plug-Ins/Components/JC303.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
-    copy "JC-303_MacOS_Universal-0.13.0/CLAP/JC303.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/JC303.clap", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/LV2"
-    copy "JC-303_MacOS_Universal-0.13.0/LV2/JC303.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/JC303.lv2", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "JC-303_MacOS_Universal-0.13.0/VST3/JC303.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/JC303.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app", "{{user}}/Applications/JC303.app", recursive: true
-  end
+  artifact "JC-303_MacOS_Universal-0.13.0/AU/JC303.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/JC303.component"
+  artifact "JC-303_MacOS_Universal-0.13.0/CLAP/JC303.clap", target: "#{Dir.home}/Library/Audio/Plug-Ins/CLAP/JC303.clap"
+  artifact "JC-303_MacOS_Universal-0.13.0/LV2/JC303.lv2", target: "#{Dir.home}/Library/Audio/Plug-Ins/LV2/JC303.lv2"
+  artifact "JC-303_MacOS_Universal-0.13.0/VST3/JC303.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/JC303.vst3"
+  app "JC-303_MacOS_Universal-0.13.0/Standalone/JC303.app", target: "#{Dir.home}/Applications/JC303.app"
 end
