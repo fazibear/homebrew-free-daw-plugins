@@ -18,11 +18,8 @@ jobs:
           fetch-depth: 0
       - name: Install Lightpanda
         run: |
-          curl --fail --location --retry 3 \
-            https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux \
-            --output "$RUNNER_TEMP/lightpanda"
-          chmod +x "$RUNNER_TEMP/lightpanda"
-          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          brew install lightpanda-io/browser/lightpanda
+          lightpanda version
       - name: Discover freebies and open cask pull requests
         env:
           GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
