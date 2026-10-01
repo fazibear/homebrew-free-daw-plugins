@@ -6,12 +6,7 @@ cask "montagem-finisher" do
   desc "Free audio plugin"
   homepage "https://github.com/nabsei/montagem-finisher"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "Montagem Finisher.component", "{{user}}/Library/Audio/Plug-Ins/Components/Montagem Finisher.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "Montagem Finisher.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Montagem Finisher.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "Montagem Finisher.app", "{{user}}/Applications/Montagem Finisher.app", recursive: true
-  end
+  artifact "Montagem Finisher.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Montagem Finisher.component"
+  artifact "Montagem Finisher.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/Montagem Finisher.vst3"
+  app "Montagem Finisher.app", target: "#{Dir.home}/Applications/Montagem Finisher.app"
 end
