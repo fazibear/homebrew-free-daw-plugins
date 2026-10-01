@@ -85,10 +85,12 @@ jobs:
             )
             ((${#files[@]} > 0)) || return 1
             python3 "$RUNNER_TEMP/cask-regenerator/regenerate_casks.py" "${files[@]}" || return 1
-            for file in "${files[@]}"; do ruby -c "$file" || return 1; done
+            while IFS= read -r file; do ruby -c "$file" || return 1; done < <(
+              git diff --name-only --diff-filter=AM -- 'Casks/*.rb'
+            )
 
-            if ! git diff --quiet -- "${files[@]}"; then
-              git add -- "${files[@]}"
+            if ! git diff --quiet -- Casks; then
+              git add -- Casks
               git commit -m "Regenerate Plugins4Free casks" || return 1
             fi
 

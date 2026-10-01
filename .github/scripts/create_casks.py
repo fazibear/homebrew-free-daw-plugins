@@ -64,17 +64,18 @@ def archive_members(candidate):
                         subprocess.run(["hdiutil", "detach", str(mountpoint)], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         names = [name for name, is_dir in entries if not is_dir]
         formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
-        suffixes = formats.get(candidate.get("format"), (".pkg", ".vst3", ".vst", ".component", ".clap"))
+        all_suffixes = (".component", ".vst", ".vst3", ".clap")
+        suffixes = formats.get(candidate.get("format"), all_suffixes)
         bundle_roots = []
         for name, is_dir in entries:
             if name.lower().endswith(".pkg"):
                 bundle_roots.append(name)
-            elif is_dir and name.lower().endswith(suffixes):
+            elif is_dir and name.lower().endswith(all_suffixes):
                 bundle_roots.append(name)
             if not is_dir:
                 parts = name.split("/")
                 for index, part in enumerate(parts):
-                    if part.lower().endswith(suffixes + (".pkg",)):
+                    if part.lower().endswith(suffixes + all_suffixes + (".pkg",)):
                         root = "/".join(parts[:index + 1])
                         if root not in bundle_roots:
                             bundle_roots.append(root)
@@ -82,9 +83,11 @@ def archive_members(candidate):
         if member is None:
             member = next((root for root in bundle_roots if root.lower().endswith(suffixes)), None)
         if member is None:
-            member = next((name for name in names if name.lower().endswith(suffixes)), None)
+            member = next((root for root in bundle_roots if root.lower().endswith(all_suffixes)), None)
+        if member is None:
+            member = next((name for name in names if name.lower().endswith(suffixes + all_suffixes)), None)
         if member:
-            # AU/VST bundles are directories in ZIP archives. Preserve files
+            # AU/VST bundles are directories in these archives. Preserve files
             # beside the bundle (such as sampler data), while the bundle move
             # itself carries all files stored inside the bundle directory.
             parent = str(Path(member).parent)
@@ -95,10 +98,14 @@ def archive_members(candidate):
                 and (name.startswith(prefix) if prefix else True)
                 and not name.startswith(f"{member}/")
             ]
-            print(f"Cask generator: {candidate['filename']} contains {member} and {len(related)} sibling file(s)", file=sys.stderr)
+            artifact_format = {
+                ".component": "AU", ".vst": "VST", ".vst3": "VST3", ".clap": "CLAP",
+            }.get(Path(member).suffix.lower(), candidate.get("format"))
+            print(f"Cask generator: {candidate['filename']} contains {member} ({artifact_format}) and {len(related)} sibling file(s)", file=sys.stderr)
         else:
             print(f"Cask generator: no {candidate.get('format', 'plugin')} bundle found in {candidate['filename']}", file=sys.stderr)
-        return (member, related, prefix) if member else None
+            artifact_format = None
+        return (member, related, prefix, artifact_format) if member else None
     except Exception as error:
         print(f"warning: could not inspect {candidate['filename']}: {error}", file=sys.stderr)
         return None
@@ -117,10 +124,12 @@ def render(candidate):
         archive = archive_members(candidate)
         if not archive:
             return None, None
-        bundle, related, prefix = archive
+        bundle, related, prefix, artifact_format = archive
         if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
         else:
+            if candidate.get("source") == "plugins4free" and artifact_format in {"AU", "VST"}:
+                name = f"{slug(display)}-{artifact_format.lower()}"
             formats = {".vst3": "VST3", ".vst": "VST", ".component": "Components", ".clap": "CLAP"}
             extension = next((value for suffix, value in formats.items() if bundle.lower().endswith(suffix)), candidate.get("format", "VST3"))
             if extension == "AU":

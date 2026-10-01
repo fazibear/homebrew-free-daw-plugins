@@ -56,14 +56,30 @@ def main():
     if len(sys.argv) < 2:
         raise SystemExit("usage: regenerate_casks.py Casks/<plugin>-au.rb [...]")
 
-    for argument in sys.argv[1:]:
-        path = Path(argument)
+    paths = [Path(argument) for argument in sys.argv[1:]]
+    source_paths = {path.resolve() for path in paths}
+    regenerated = {}
+    obsolete_paths = set()
+    for path in paths:
         candidate = candidate_for(path)
         name, content = render(candidate)
-        if name != path.stem or not content:
+        if not name or not content:
             raise ValueError(f"{path}: current generator could not reproduce this cask")
-        path.write_text(content)
-        print(f"Regenerated {path}", file=sys.stderr)
+        target = path.with_name(f"{name}.rb")
+        if target.exists() and target.resolve() not in source_paths:
+            raise ValueError(f"{path}: regenerated cask {target} already exists")
+        if target in regenerated and regenerated[target] != content:
+            raise ValueError(f"{path}: multiple casks generated different contents for {target}")
+        regenerated[target] = content
+        if target != path:
+            obsolete_paths.add(path)
+
+    for target, content in regenerated.items():
+        target.write_text(content)
+        print(f"Regenerated {target}", file=sys.stderr)
+    for path in obsolete_paths:
+        if path not in regenerated:
+            path.unlink()
 
 
 if __name__ == "__main__":
