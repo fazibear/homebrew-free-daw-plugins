@@ -6,5 +6,6 @@ cask "sampleswap-au" do
   desc "SampleSwap is a drum replacement sampler ."
   homepage "https://plugins4free.com/plugin/3671"
   depends_on :macos
-  dmg "SampleSwapInstaller_Mac.dmg"
+  container type: :dmg
+  pkg "SampleSwap.pkg"
 end
