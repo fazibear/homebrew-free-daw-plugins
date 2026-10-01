@@ -44,7 +44,10 @@ jobs:
 
           body="Automated update check for versioned casks using their GitHub Releases."$'\n\n''Updated casks:'
           while IFS= read -r file; do
-            body+=$'\n- '"$(basename "$file" .rb)"
+            old_version="$(git show "origin/${base_branch}:${file}" | sed -n 's/^  version "\([^"]*\)"$/\1/p' | head -n 1)"
+            new_version="$(sed -n 's/^  version "\([^"]*\)"$/\1/p' "$file" | head -n 1)"
+            cask_token="$(basename "$file" .rb)"
+            body+=$'\n- '"$cask_token: $old_version → $new_version"
           done <<< "$changed_files"
           body+=$'\n\nPlease review the updated versions, download URLs, and checksums.'
           open_pr="$(gh pr list --repo "$REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number // empty')"
