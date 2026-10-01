@@ -51,9 +51,17 @@ jobs:
           fi
 
           if ((${#pr_numbers[@]} == 0)); then
-            echo "No open Plugins4Free discovery PRs to regenerate"
+            echo "No matching open Plugins4Free discovery PRs found."
             exit 0
           fi
+
+          total_prs=${#pr_numbers[@]}
+          printf '\n========== Regeneration queue =========\n'
+          echo "Found $total_prs PR(s) to regenerate:"
+          for index in "${!pr_numbers[@]}"; do
+            printf '  %2d/%d  PR #%s\n' "$((index + 1))" "$total_prs" "${pr_numbers[$index]}"
+          done
+          printf '=======================================\n'
 
           regenerate_one() {
             local pr_number="$1"
@@ -73,7 +81,10 @@ jobs:
             [[ "$author" == "$BOT_LOGIN" ]] || return 1
             [[ "$has_label" == true ]] || return 1
 
-            echo "Regenerating PR #$pr_number ($position/$total) ($head_ref)"
+            printf '\n\n========== PR %d/%d: #%s =========\n' "$position" "$total" "$pr_number"
+            printf '%s\n' "$head_ref"
+            printf '===================================\n'
+            echo "  Rebasing onto $base_ref..."
             gh pr checkout "$pr_number" --repo "$REPOSITORY" || return 1
             original_head="$(git rev-parse HEAD)" || return 1
             git fetch origin "$base_ref" || return 1
@@ -85,8 +96,13 @@ jobs:
             while IFS= read -r file; do files+=("$file"); done < <(
               git diff --diff-filter=AM --name-only "origin/$base_ref...HEAD" -- 'Casks/*.rb'
             )
-            ((${#files[@]} > 0)) || return 1
+            if ((${#files[@]} == 0)); then
+              echo "  Failed: no added or modified cask files found after rebase."
+              return 1
+            fi
+            echo "  Regenerating ${#files[@]} cask(s)..."
             python3 "$RUNNER_TEMP/cask-regenerator/regenerate_casks.py" "${files[@]}" || return 1
+            echo "  Checking generated Ruby syntax..."
             while IFS= read -r file; do ruby -c "$file" || return 1; done < <(
               git diff --name-only --diff-filter=AM -- 'Casks/*.rb'
             )
@@ -97,19 +113,21 @@ jobs:
             fi
 
             if [[ "$(git rev-parse HEAD)" != "$original_head" ]]; then
+              echo "  Pushing regenerated casks..."
               git push --force-with-lease origin "HEAD:$head_ref" || return 1
+              echo "  Done."
             else
-              echo "PR #$pr_number already matches the base branch and current generator"
+              echo "  Already up to date."
             fi
           }
 
           failed_prs=()
-          total_prs=${#pr_numbers[@]}
           for index in "${!pr_numbers[@]}"; do
             pr_number="${pr_numbers[$index]}"
             position=$((index + 1))
             if ! regenerate_one "$pr_number" "$position" "$total_prs"; then
-              echo "Failed to regenerate PR #$pr_number; continuing with the next PR"
+              echo "  FAILED: PR #$pr_number"
+              echo "  Continuing with the next PR."
               failed_prs+=("$pr_number")
               git rebase --abort 2>/dev/null || true
               git reset --hard
@@ -118,6 +136,12 @@ jobs:
           if ((${#failed_prs[@]} > 0)); then
             failed_count=${#failed_prs[@]}
             failed_list="$(IFS=', '; echo "${failed_prs[*]}")"
-            echo "$failed_count PR(s) failed regeneration: #$failed_list"
+            printf '\n\n========== Regeneration summary =========\n'
+            printf 'Failed: %d of %d PR(s)\n' "$failed_count" "$total_prs"
+            printf 'PR numbers: #%s\n' "$failed_list"
+            printf '=========================================\n'
             exit 1
           fi
+          printf '\n\n========== Regeneration summary =========\n'
+          printf 'Succeeded: %d PR(s)\n' "$total_prs"
+          printf '=========================================\n'
