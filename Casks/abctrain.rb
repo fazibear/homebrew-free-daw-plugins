@@ -7,9 +7,5 @@ cask "abctrain" do
   homepage "https://github.com/bogggare567/abcTrain"
   depends_on :macos
   container type: :dmg
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "abcTrain-macOS-2.0.1.dmg.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/abcTrain-macOS-2.0.1.dmg.vst3", recursive: true
-    system_command "installer", args: ["-pkg", "#staged_path/#abcTrain-2.0.1.pkg", "-target", "/"]
-  end
+  pkg "abcTrain-2.0.1.pkg"
 end
