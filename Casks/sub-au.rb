@@ -6,5 +6,10 @@ cask "sub-au" do
   desc "SUB is a vintage analog drums module recreating many classic drum sounds and a Sub-frequency oscillator for extra fun!"
   homepage "https://plugins4free.com/plugin/3133"
   depends_on :macos
-  artifact "Plugin/SUB Analog Drums.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Plugin/SUB Analog Drums.component", "{{user}}/Library/Audio/Plug-Ins/Components/SUB Analog Drums.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    copy "Plugin/.DS_Store", "{{user}}/Library/Audio/Plug-Ins/Components/.DS_Store"
+  end
 end
