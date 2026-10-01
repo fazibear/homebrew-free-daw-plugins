@@ -6,5 +6,10 @@ cask "afrokeyz-lite-au" do
   desc "Afrokeyz Lite is a keyboard / synthesizer rompler designed for making african beats as Dancehall, R&B, Reggaeton, Lo-fi, Afrobeats..."
   homepage "https://plugins4free.com/plugin/3413"
   depends_on :macos
-  artifact "AU/Afro Keyz Lite.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "AU/Afro Keyz Lite.component", "{{user}}/Library/Audio/Plug-Ins/Components/Afro Keyz Lite.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    copy "AU/.DS_Store", "{{user}}/Library/Audio/Plug-Ins/Components/.DS_Store"
+  end
 end

@@ -6,5 +6,10 @@ cask "afrokeyz-lite-vst" do
   desc "Afrokeyz Lite is a keyboard / synthesizer rompler designed for making african beats as Dancehall, R&B, Reggaeton, Lo-fi, Afrobeats..."
   homepage "https://plugins4free.com/plugin/3413"
   depends_on :macos
-  artifact "VST/Afro Keyz Lite.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "VST/Afro Keyz Lite.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Afro Keyz Lite.vst"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    copy "VST/.DS_Store", "{{user}}/Library/Audio/Plug-Ins/VST/.DS_Store"
+  end
 end
