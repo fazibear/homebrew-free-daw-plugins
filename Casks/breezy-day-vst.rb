@@ -6,5 +6,8 @@ cask "breezy-day-vst" do
   desc "Breezy Day is a simple wind chimes rompler."
   homepage "https://plugins4free.com/plugin/3188"
   depends_on :macos
-  artifact "Mac VST/Breezy Day.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Mac VST/Breezy Day.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Breezy Day.vst"
+  end
 end

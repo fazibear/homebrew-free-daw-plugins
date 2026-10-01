@@ -6,5 +6,8 @@ cask "breezy-day-au" do
   desc "Breezy Day is a simple wind chimes rompler."
   homepage "https://plugins4free.com/plugin/3188"
   depends_on :macos
-  artifact "Mac AU/Breezy Day.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Mac AU/Breezy Day.component", "{{user}}/Library/Audio/Plug-Ins/Components/Breezy Day.component"
+  end
 end
