@@ -13,15 +13,5 @@ cask "re-deemer" do
     move "RE-DEEMER/RE-DEEMER.component", "{{user}}/Library/Audio/Plug-Ins/Components/RE-DEEMER.component"
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
     move "RE-DEEMER/RE-DEEMER.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/RE-DEEMER.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/LICENSE", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/LICENSE"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/install.sh", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/install.sh"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/VERSION.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/VERSION.txt"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/MANUAL.md", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/MANUAL.md"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/PRESETS.md", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/PRESETS.md"
   end
 end
