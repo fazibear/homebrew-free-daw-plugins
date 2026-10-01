@@ -6,12 +6,7 @@ cask "re-deemer" do
   desc "Free audio plugin"
   homepage "https://github.com/naturarum/re-deemer"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
-    copy "RE-DEEMER/RE-DEEMER.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/RE-DEEMER.clap", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "RE-DEEMER/RE-DEEMER.component", "{{user}}/Library/Audio/Plug-Ins/Components/RE-DEEMER.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "RE-DEEMER/RE-DEEMER.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/RE-DEEMER.vst3", recursive: true
-  end
+  artifact "RE-DEEMER/RE-DEEMER.clap", target: "#{Dir.home}/Library/Audio/Plug-Ins/CLAP/RE-DEEMER.clap"
+  artifact "RE-DEEMER/RE-DEEMER.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/RE-DEEMER.component"
+  artifact "RE-DEEMER/RE-DEEMER.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/RE-DEEMER.vst3"
 end
