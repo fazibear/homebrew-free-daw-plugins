@@ -266,7 +266,7 @@ def regenerate_action():
             if changed:
                 run("git", "add", "--", *changed)
                 run("git", "commit", "-m", "Regenerate cask PR")
-                run("git", "push", "--force-with-lease", "origin", branch)
+                run("git", "push", "origin", branch)
             print(f"PR #{number}: {'regenerated' if is_discovery else 'updated'} ({len(changed)} changed cask file(s))")
         except Exception as error:
             failures.append((number, error))
