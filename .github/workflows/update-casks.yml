@@ -28,18 +28,14 @@ jobs:
           base_branch="${GITHUB_REF_NAME}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          python3 scripts/update_casks.py
-
-          changed_files="$(git diff --name-only -- Casks)"
-          if [[ -z "$changed_files" ]]; then
-            echo "No newer GitHub releases found for supported versioned casks."
-            exit 0
-          fi
-
           groups_dir="$RUNNER_TEMP/cask-update-groups"
           mkdir -p "$groups_dir"
-          while IFS= read -r file; do
-            [[ -n "$file" ]] || continue
+          for file in Casks/*.rb; do
+            version="$(sed -n 's/^  version "\([^"]*\)"$/\1/p' "$file" | head -n 1)"
+            homepage="$(sed -n 's/^  homepage "\([^"]*\)"$/\1/p' "$file" | head -n 1)"
+            url="$(sed -n 's/^  url "\([^"]*\)"$/\1/p' "$file" | head -n 1)"
+            [[ -n "$version" && "$version" != latest ]] || continue
+            [[ "$homepage" == https://github.com/* && "$url" == *github.com/* ]] || continue
             token="$(basename "$file" .rb)"
             case "$token" in
               *-vst3) plugin_key="${token%-vst3}" ;;
@@ -50,21 +46,31 @@ jobs:
               *) plugin_key="$token" ;;
             esac
             printf '%s\n' "$file" >> "$groups_dir/$plugin_key"
-          done <<< "$changed_files"
+          done
 
-          for group in "$groups_dir"/*; do
+          shopt -s nullglob
+          groups=("$groups_dir"/*)
+          if ((${#groups[@]} == 0)); then
+            echo "No versioned GitHub casks found to check."
+            exit 0
+          fi
+          for group in "${groups[@]}"; do
             plugin_key="$(basename "$group")"
             branch="automation/cask-updates-${plugin_key}"
             group_files=()
             while IFS= read -r file; do group_files+=("$file"); done < "$group"
-            patch_file="$RUNNER_TEMP/${plugin_key}.patch"
-            git diff --binary -- "${group_files[@]}" > "$patch_file"
-            [[ -s "$patch_file" ]] || continue
-
             git reset --hard "origin/${base_branch}"
             git checkout -B "$branch" "origin/${base_branch}"
-            git apply "$patch_file"
-            git add -- "${group_files[@]}"
+            python3 scripts/update_casks.py "${group_files[@]}"
+
+            changed_files="$(git diff --name-only -- Casks)"
+            if [[ -z "$changed_files" ]]; then
+              echo "No updates for ${plugin_key}."
+              continue
+            fi
+            changed_group_files=()
+            while IFS= read -r file; do changed_group_files+=("$file"); done <<< "$changed_files"
+            git add -- "${changed_group_files[@]}"
             git commit -m "Update ${plugin_key} casks"
             git push --force-with-lease origin "$branch"
 
@@ -75,7 +81,7 @@ jobs:
             done
             pr_title="Update ${plugin_name:-$plugin_key} casks"
             body="Automated update check for versioned casks using their GitHub Releases."$'\n\n''Updated casks:'
-            for file in "${group_files[@]}"; do
+            for file in "${changed_group_files[@]}"; do
               old_version="$(git show "origin/${base_branch}:${file}" | sed -n 's/^  version "\([^"]*\)"$/\1/p' | head -n 1)"
               new_version="$(sed -n 's/^  version "\([^"]*\)"$/\1/p' "$file" | head -n 1)"
               cask_token="$(basename "$file" .rb)"

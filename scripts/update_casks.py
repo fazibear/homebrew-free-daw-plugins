@@ -121,7 +121,8 @@ def update(path):
 def main():
     updated = []
     counts = {"updated": 0, "current": 0, "skip": 0, "error": 0}
-    for path in sorted(Path("Casks").glob("*.rb")):
+    paths = [Path(argument) for argument in sys.argv[1:]] or sorted(Path("Casks").glob("*.rb"))
+    for path in paths:
         current = stanza(path.read_text(), "version")
         if not current or current == "latest":
             continue
