@@ -6,5 +6,8 @@ cask "aspen-clarinet-au" do
   desc "Aspen Clarinet."
   homepage "https://plugins4free.com/plugin/3318"
   depends_on :macos
-  artifact "Aspen Clarinet.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Aspen Clarinet.component", "{{user}}/Library/Audio/Plug-Ins/Components/Aspen Clarinet.component"
+  end
 end

@@ -6,5 +6,8 @@ cask "aspen-clarinet-vst" do
   desc "Aspen Clarinet."
   homepage "https://plugins4free.com/plugin/3318"
   depends_on :macos
-  artifact "Aspen Clarinet.vst3.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Aspen Clarinet.vst3.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Aspen Clarinet.vst3.vst"
+  end
 end
