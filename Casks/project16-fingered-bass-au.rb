@@ -6,5 +6,8 @@ cask "project16-fingered-bass-au" do
   desc "Project16 Fingered Bass is a sampled Rickenbacker 4001 bass played with the fingers."
   homepage "https://plugins4free.com/plugin/2319"
   depends_on :macos
-  artifact "Project16 Fingered Bass.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Project16 Fingered Bass.component", "{{user}}/Library/Audio/Plug-Ins/Components/Project16 Fingered Bass.component"
+  end
 end
