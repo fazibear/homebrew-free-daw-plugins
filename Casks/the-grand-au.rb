@@ -6,5 +6,10 @@ cask "the-grand-au" do
   desc "The Grand is a sampled Grand Piano ."
   homepage "https://plugins4free.com/plugin/2766"
   depends_on :macos
-  artifact "DSK The Grand - macAU/DSK The Grand.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "DSK The Grand - macAU/DSK The Grand.component", "{{user}}/Library/Audio/Plug-Ins/Components/DSK The Grand.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    copy "DSK The Grand - macAU/DSK Music - Readme.txt", "{{user}}/Library/Audio/Plug-Ins/Components/DSK Music - Readme.txt"
+  end
 end
