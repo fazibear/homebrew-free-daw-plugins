@@ -6,5 +6,9 @@ cask "ticky-clav-vst" do
   desc "This plugin emulates the ultra-funky sound of the Hohner Clavinet ."
   homepage "https://plugins4free.com/plugin/276"
   depends_on :macos
-  dmg "TickyClav_2007_07_15.dmg"
+  container type: :dmg
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "VST/TickyClav.vst", "{{user}}/Library/Audio/Plug-Ins/VST/TickyClav.vst"
+  end
 end
