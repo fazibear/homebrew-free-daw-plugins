@@ -1,0 +1,54 @@
+name: Update versioned casks
+run-name: Check versioned casks for updates
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.CASK_BOT_TOKEN }}
+      - name: Check matching casks for newer releases
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          base_branch="${GITHUB_REF_NAME}"
+          branch="automation/cask-updates"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch" "origin/${base_branch}"
+          python3 .github/scripts/update_casks.py
+
+          changed_files="$(git diff --name-only -- Casks)"
+          if [[ -z "$changed_files" ]]; then
+            echo "No newer GitHub releases found for supported versioned casks."
+            exit 0
+          fi
+
+          git add -- Casks
+          git commit -m "Update outdated casks"
+          git push --force-with-lease origin "$branch"
+
+          body="Automated update check for versioned casks using their GitHub Releases."$'\n\n''Updated casks:'
+          while IFS= read -r file; do
+            body+=$'\n- '"$(basename "$file" .rb)"
+          done <<< "$changed_files"
+          body+=$'\n\nPlease review the updated versions, download URLs, and checksums.'
+          open_pr="$(gh pr list --repo "$REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number // empty')"
+          if [[ -n "$open_pr" ]]; then
+            gh pr edit "$open_pr" --repo "$REPOSITORY" --title "Update outdated casks" --body "$body"
+          else
+            gh pr create --repo "$REPOSITORY" --base "$base_branch" --head "$branch" \
+              --title "Update outdated casks" --body "$body" --label automation
+          fi

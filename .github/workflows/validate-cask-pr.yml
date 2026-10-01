@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   validate:
@@ -30,7 +30,7 @@ jobs:
           head_ref="$(jq -r '.headRefName' <<< "$metadata")"
           head_repo="$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")"
           has_automation_label="$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")"
-          [[ "$head_ref" == automation/discovered-* ]]
+          [[ "$head_ref" == automation/discovered-* || "$head_ref" == automation/cask-updates-* ]]
           [[ "$head_repo" == "$REPOSITORY" ]]
           [[ "$has_automation_label" == true ]]
           gh pr checkout "$INPUT_PR" --repo "$REPOSITORY"
@@ -68,3 +68,11 @@ jobs:
             brew install --cask --verbose "$GITHUB_REPOSITORY/$token"
             brew uninstall --cask --force "$GITHUB_REPOSITORY/$token"
           done
+      - name: Comment on cask validation failure
+        if: ${{ failure() && steps.pr.outputs.number != '' }}
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
+            --body "Cask validation failed. Review the [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for the failing check and error output."

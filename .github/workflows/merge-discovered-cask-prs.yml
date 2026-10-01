@@ -45,7 +45,8 @@ jobs:
           fi
           echo "Checking bot author, automation branch, repository, and label"
           [[ "$(jq -r '.author.login' <<< "$metadata")" == "$BOT_LOGIN" ]]
-          [[ "$(jq -r '.headRefName' <<< "$metadata")" == automation/discovered-* ]]
+          head_ref="$(jq -r '.headRefName' <<< "$metadata")"
+          [[ "$head_ref" == automation/discovered-* || "$head_ref" == automation/cask-updates-* ]]
           [[ "$(jq -r '.headRepository.nameWithOwner' <<< "$metadata")" == "$REPOSITORY" ]]
           [[ "$(jq -r '[.labels[].name] | any(. == "automation")' <<< "$metadata")" == true ]]
           echo "Requesting squash auto-merge for PR #$PR_NUMBER"
