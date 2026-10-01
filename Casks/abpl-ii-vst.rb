@@ -6,5 +6,6 @@ cask "abpl-ii-vst" do
   desc "Ample Bass P Lite II (ABPL) is a free lite version of ABP, recorded on a Fender Precision Bass ."
   homepage "https://plugins4free.com/plugin/2505"
   depends_on :macos
-  dmg "ABPL_2_3_1_Complete_Installer.dmg"
+  container type: :dmg
+  pkg "ABPL_2_3_1_Complete_Installer.pkg"
 end
