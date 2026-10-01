@@ -6,5 +6,8 @@ cask "ribs-vst" do
   desc "Ribs is a granular instrument / FX ."
   homepage "https://plugins4free.com/plugin/2829"
   depends_on :macos
-  artifact "OSX-VST/Ribs.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "OSX-VST/Ribs.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Ribs.vst"
+  end
 end

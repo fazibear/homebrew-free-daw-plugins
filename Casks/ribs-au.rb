@@ -6,5 +6,8 @@ cask "ribs-au" do
   desc "Ribs is a granular instrument / FX ."
   homepage "https://plugins4free.com/plugin/2829"
   depends_on :macos
-  artifact "OSX-AU/Ribs.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "OSX-AU/Ribs.component", "{{user}}/Library/Audio/Plug-Ins/Components/Ribs.component"
+  end
 end
