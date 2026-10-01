@@ -6,5 +6,8 @@ cask "aspen-trumpet-1-au" do
   desc "Aspen Trumpet 1."
   homepage "https://plugins4free.com/plugin/3321"
   depends_on :macos
-  artifact "Aspen Trumpet 1.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Aspen Trumpet 1.component", "{{user}}/Library/Audio/Plug-Ins/Components/Aspen Trumpet 1.component"
+  end
 end
