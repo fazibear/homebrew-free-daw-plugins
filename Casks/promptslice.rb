@@ -11,13 +11,7 @@ cask "promptslice" do
     move "PromptSlice/PromptSlice.component", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.component"
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
     move "PromptSlice/PromptSlice.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/PromptSlice.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/MacOS"
-    copy "PromptSlice/PromptSlice.app/Contents/MacOS/PromptSlice", "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/MacOS/PromptSlice"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/Resources"
-    copy "PromptSlice/PromptSlice.app/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/Resources/RecentFilesMenuTemplate.nib"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents"
-    copy "PromptSlice/PromptSlice.app/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/Info.plist"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents"
-    copy "PromptSlice/PromptSlice.app/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Resources/PromptSlice/PromptSlice.app/Contents/PkgInfo"
+    mkdir_p "{{user}}/Applications"
+    copy "PromptSlice/PromptSlice.app", "{{user}}/Applications/PromptSlice.app"
   end
 end
