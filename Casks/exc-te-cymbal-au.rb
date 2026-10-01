@@ -6,5 +6,6 @@ cask "exc-te-cymbal-au" do
   desc "EXC!TE CYMBAL is a cymbal plugin features ultra-realistic sound through physical modeling."
   homepage "https://plugins4free.com/plugin/3934"
   depends_on :macos
-  dmg "EXCTE-Cymbal.dmg"
+  container type: :dmg
+  pkg "EXC!TE Cymbal.pkg"
 end
