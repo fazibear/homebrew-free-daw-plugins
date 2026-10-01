@@ -8,8 +8,6 @@ cask "vst-speek-au" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "AUSpeek3-x64/__MACOSX/._AUSpeek3.component", "{{user}}/Library/Audio/Plug-Ins/Components/._AUSpeek3.component"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"
-    copy "AUSpeek3-x64/__MACOSX/AUSpeek3.component/._Icon", "{{user}}/Library/Audio/Plug-Ins/Components/AUSpeek3.component/._Icon"
+    move "AUSpeek3-x64/AUSpeek3.component", "{{user}}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"
   end
 end
