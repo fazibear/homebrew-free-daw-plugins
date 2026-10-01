@@ -6,12 +6,7 @@ cask "reevr" do
   desc "Free audio plugin"
   homepage "https://github.com/tiagolr/reevr"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "reevr-macos/AU/REEV-R.component", "{{user}}/Library/Audio/Plug-Ins/Components/REEV-R.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/LV2"
-    copy "reevr-macos/LV2/REEV-R.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/REEV-R.lv2", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "reevr-macos/VST3/REEV-R.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/REEV-R.vst3", recursive: true
-  end
+  artifact "reevr-macos/AU/REEV-R.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/REEV-R.component"
+  artifact "reevr-macos/LV2/REEV-R.lv2", target: "#{Dir.home}/Library/Audio/Plug-Ins/LV2/REEV-R.lv2"
+  artifact "reevr-macos/VST3/REEV-R.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/REEV-R.vst3"
 end
