@@ -6,5 +6,8 @@ cask "vsco2-trombone-vst" do
   desc "VSCO2 Trombone is a sampled trombone ."
   homepage "https://plugins4free.com/plugin/2556"
   depends_on :macos
-  artifact "VSCO2 Trombone.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "VSCO2 Trombone.vst", "{{user}}/Library/Audio/Plug-Ins/VST/VSCO2 Trombone.vst"
+  end
 end
