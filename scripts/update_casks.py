@@ -4,10 +4,16 @@ import hashlib
 import re
 import sys
 import urllib.parse
-import urllib.request
 from pathlib import Path
 
-from cask_utils import github_json, github_repository, stanza
+from cask_utils import (
+    github_json,
+    github_repository,
+    http_request,
+    macos_installer_assets,
+    preserve_cask_token,
+    stanza,
+)
 from create_casks import render
 
 
@@ -35,9 +41,8 @@ def newer_version(current, latest):
 
 
 def sha256(url):
-    request = urllib.request.Request(url, headers={"User-Agent": "free-daw-cask-updater"})
     digest = hashlib.sha256()
-    with urllib.request.urlopen(request, timeout=60) as response:
+    with http_request(url, user_agent="free-daw-cask-updater", timeout=60) as response:
         while chunk := response.read(1024 * 1024):
             digest.update(chunk)
     return digest.hexdigest()
@@ -45,11 +50,7 @@ def sha256(url):
 
 def release_asset(release, old_url):
     old_suffix = Path(urllib.parse.urlparse(old_url).path).suffix.lower()
-    assets = [
-        asset for asset in release.get("assets", [])
-        if asset["name"].lower().endswith((".pkg", ".dmg", ".zip"))
-        and any(marker in asset["name"].lower() for marker in ("mac", "macos", "darwin", "osx", "universal"))
-    ]
+    assets = macos_installer_assets(release)
     if old_suffix:
         matching = [asset for asset in assets if asset["name"].lower().endswith(old_suffix)]
         if matching:
@@ -103,14 +104,9 @@ def update(path):
         format_tokens = {f"{token}-{suffix}" for suffix in ("au", "vst", "vst3", "clap", "lv2")}
         if path.stem not in format_tokens:
             return "skip", f"generated cask token {token} differs from existing token {path.stem}"
-        content, replacements = re.subn(
-            r'^cask "[^"]+" do$',
-            f'cask "{path.stem}" do',
-            content,
-            count=1,
-            flags=re.M,
-        )
-        if replacements != 1:
+        try:
+            content = preserve_cask_token(content, path.stem)
+        except ValueError:
             return "skip", f"could not preserve existing cask token {path.stem}"
     if content == source:
         return "current", f"latest release {latest} produces no cask change"

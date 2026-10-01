@@ -5,17 +5,7 @@ import random
 import sys
 import urllib.parse
 
-from cask_utils import github_json
-
-MACOS_ASSET_MARKERS = ("mac", "macos", "darwin", "osx", "universal")
-
-
-def is_macos_asset(name):
-    name = name.lower()
-    if name.endswith((".pkg", ".dmg")):
-        return True
-    return name.endswith(".zip") and any(marker in name for marker in MACOS_ASSET_MARKERS)
-
+from cask_utils import github_json, macos_installer_assets
 
 def candidate_from_repository(repo):
     print(f"GitHub: checking {repo['full_name']}", file=sys.stderr)
@@ -24,7 +14,7 @@ def candidate_from_repository(repo):
     except Exception:
         print(f"GitHub: no accessible latest release for {repo['full_name']}", file=sys.stderr)
         return None
-    assets = [asset for asset in release.get("assets", []) if is_macos_asset(asset["name"])]
+    assets = macos_installer_assets(release, require_platform_marker=False)
     if not assets:
         print(f"GitHub: no macOS installer for {repo['full_name']}", file=sys.stderr)
         return None

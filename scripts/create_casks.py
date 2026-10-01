@@ -7,9 +7,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import urllib.request
 import zipfile
 from pathlib import Path
+
+from cask_utils import http_request
 
 ROOT = Path(__file__).resolve().parents[1]
 CASKS = ROOT / "Casks"
@@ -52,8 +53,7 @@ def is_metadata_path(name):
 def existing():
     result = {path.stem for path in CASKS.glob("*.rb")}
     try:
-        request = urllib.request.Request("https://formulae.brew.sh/api/cask.json", headers={"User-Agent": "free-daw-cask-discovery"})
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with http_request("https://formulae.brew.sh/api/cask.json", user_agent="free-daw-cask-discovery") as response:
             result |= {item["token"] for item in json.load(response)}
     except Exception as error:
         print(f"warning: Homebrew catalog unavailable: {error}", file=sys.stderr)
@@ -64,8 +64,7 @@ def archive_members(candidate, *, strict=False):
     if not (filename.endswith(".zip") or filename.endswith(".dmg")):
         return None
     try:
-        request = urllib.request.Request(candidate["url"], headers={"User-Agent": "free-daw-cask-discovery"})
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with http_request(candidate["url"], user_agent="free-daw-cask-discovery") as response:
             with tempfile.TemporaryDirectory() as temporary:
                 archive_path = Path(temporary) / candidate["filename"]
                 with archive_path.open("wb") as archive_file:

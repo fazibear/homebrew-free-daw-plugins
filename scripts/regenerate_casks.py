@@ -4,7 +4,7 @@ import re
 import sys
 from pathlib import Path
 
-from cask_utils import github_repository, stanza
+from cask_utils import github_repository, preserve_cask_token, stanza
 from create_casks import archive_members, render
 from github_plugins import candidate_from_repository
 from plugins4free_plugins import candidates_from_plugin_page
@@ -61,15 +61,10 @@ def main():
         if not name or not content:
             raise ValueError(f"{path}: current source candidate could not produce a cask")
         if name != path.stem:
-            content, replacements = re.subn(
-                r'^cask "[^"]+" do$',
-                f'cask "{path.stem}" do',
-                content,
-                count=1,
-                flags=re.M,
-            )
-            if replacements != 1:
-                raise ValueError(f"{path}: could not preserve the existing cask token")
+            try:
+                content = preserve_cask_token(content, path.stem)
+            except ValueError as error:
+                raise ValueError(f"{path}: {error}") from error
             name = path.stem
         target = path
         if target.exists() and target.resolve() not in source_paths:

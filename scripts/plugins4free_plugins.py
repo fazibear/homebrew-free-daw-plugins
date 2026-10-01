@@ -4,8 +4,9 @@ import json
 import re
 import sys
 import urllib.parse
-import urllib.request
 from html.parser import HTMLParser
+
+from cask_utils import http_request
 
 DIRECTORY = "https://plugins4free.com/instruments?sort=random&os%5B%5D=allmacos&ajax=1"
 
@@ -93,8 +94,7 @@ class ElementTextParser(HTMLParser):
 
 def candidates_from_plugin_page(url, fallback_title=""):
     print(f"Plugins4Free: fetching {url}", file=sys.stderr)
-    page_request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (free-daw-cask-discovery)"})
-    with urllib.request.urlopen(page_request, timeout=15) as page_response:
+    with http_request(url, user_agent="Mozilla/5.0 (free-daw-cask-discovery)", timeout=15) as page_response:
         page = page_response.read(500_000).decode("utf-8", "ignore")
     title_parser = PluginTitleParser()
     title_parser.feed(page)
@@ -127,8 +127,7 @@ def candidates_from_plugin_page(url, fallback_title=""):
 
 def main():
     print(f"Plugins4Free: fetching directory {DIRECTORY}", file=sys.stderr)
-    request = urllib.request.Request(DIRECTORY, headers={"User-Agent": "Mozilla/5.0 (free-daw-cask-discovery)"})
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with http_request(DIRECTORY, user_agent="Mozilla/5.0 (free-daw-cask-discovery)", timeout=30) as response:
         html = response.read(2_000_000).decode("utf-8", "ignore")
     try:
         payload = json.loads(html)
