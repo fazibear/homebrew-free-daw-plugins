@@ -6,12 +6,7 @@ cask "homecorrupter" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/homecorrupter"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    copy "VST/homecorrupter.vst", "{{user}}/Library/Audio/Plug-Ins/VST/homecorrupter.vst", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "VST3/homecorrupter.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/homecorrupter.vst3", recursive: true
-    mkdir_p "{{user}}/Applications"
-    copy "AU/Homecorrupter AUV3.app", "{{user}}/Applications/Homecorrupter AUV3.app", recursive: true
-  end
+  artifact "VST/homecorrupter.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/homecorrupter.vst"
+  artifact "VST3/homecorrupter.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/homecorrupter.vst3"
+  app "AU/Homecorrupter AUV3.app", target: "#{Dir.home}/Applications/Homecorrupter AUV3.app"
 end
