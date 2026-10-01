@@ -6,8 +6,5 @@ cask "dtblkfx" do
   desc "Free audio plugin"
   homepage "https://github.com/shuklabhay/dtblkfx-osx-recompiled"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "DtBlkFx.component", "{{user}}/Library/Audio/Plug-Ins/Components/DtBlkFx.component", recursive: true
-  end
+  artifact "DtBlkFx.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/DtBlkFx.component"
 end
