@@ -6,5 +6,10 @@ cask "vstsid-vst" do
   desc "VSTSID is a Commodore 64 sound chip emulation."
   homepage "https://plugins4free.com/plugin/3362"
   depends_on :macos
-  artifact "macOS/VST/vstsid.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "macOS/VST/vstsid.vst", "{{user}}/Library/Audio/Plug-Ins/VST/vstsid.vst"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    copy "macOS/VST/.DS_Store", "{{user}}/Library/Audio/Plug-Ins/VST/.DS_Store"
+  end
 end
