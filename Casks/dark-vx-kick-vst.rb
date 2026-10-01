@@ -6,5 +6,8 @@ cask "dark-vx-kick-vst" do
   desc "Dark VX Kick is a sampled kick drum with 4 velocity layers, some round-robins and a lot of flexibility."
   homepage "https://plugins4free.com/plugin/2210"
   depends_on :macos
-  artifact "Dark VX Kick.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Dark VX Kick.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Dark VX Kick.vst"
+  end
 end
