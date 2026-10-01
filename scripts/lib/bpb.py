@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 import urllib.parse
 import urllib.request
@@ -42,17 +43,34 @@ def response_diagnostics(envelope):
     return re.sub(r"\s+", " ", "; ".join(details)).strip()
 
 
+def lightpanda_fetch(url, *options):
+    result = subprocess.run(
+        ["lightpanda", "fetch", url, "--dump", "html", "--json", "--wait-ms", "10000", "--log-level", "fatal", *options],
+        check=True, capture_output=True, text=True, timeout=60,
+    )
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f"Lightpanda returned invalid JSON for {url}") from error
+
+
 def fetch(url):
-    """Fetch a JSON response."""
+    """Fetch JSON, warming up BPB cookies once if Cloudflare challenges it."""
     if shutil.which("lightpanda"):
-        result = subprocess.run(
-            ["lightpanda", "fetch", url, "--dump", "html", "--json", "--wait-ms", "10000", "--log-level", "fatal"],
-            check=True, capture_output=True, text=True, timeout=60,
+        envelope = lightpanda_fetch(url)
+        challenged = any(
+            header.get("name", "").lower() == "cf-mitigated"
+            and header.get("value") == "challenge"
+            for header in envelope.get("headers", [])
         )
-        try:
-            envelope = json.loads(result.stdout)
-        except json.JSONDecodeError as error:
-            raise RuntimeError(f"Lightpanda returned invalid JSON for {url}") from error
+        if envelope.get("http_status") == 403 and challenged:
+            print("BPB: Cloudflare challenge; retrying API with homepage cookies", file=sys.stderr)
+            with tempfile.TemporaryDirectory(prefix="bpb-") as temporary:
+                cookies = Path(temporary) / "cookies.json"
+                # Even a challenged homepage can issue cookies useful to the API.
+                lightpanda_fetch(HOME, "--cookie-jar", str(cookies))
+                if cookies.is_file():
+                    envelope = lightpanda_fetch(url, "--cookie", str(cookies))
         status = envelope.get("http_status", 0)
         if status >= 400:
             details = response_diagnostics(envelope)
