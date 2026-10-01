@@ -6,5 +6,26 @@ cask "promptslice" do
   desc "Free audio plugin"
   homepage "https://github.com/vasylNaumenko/promptslice"
   depends_on :macos
-  artifact "PromptSlice/PromptSlice.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "PromptSlice/PromptSlice.component", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.component"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents/_CodeSignature"
+    copy "PromptSlice/PromptSlice.vst3/Contents/_CodeSignature/CodeResources", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents/_CodeSignature/CodeResources"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents/MacOS"
+    copy "PromptSlice/PromptSlice.vst3/Contents/MacOS/PromptSlice", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents/MacOS/PromptSlice"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents/Resources"
+    copy "PromptSlice/PromptSlice.vst3/Contents/Resources/moduleinfo.json", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents/Resources/moduleinfo.json"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents"
+    copy "PromptSlice/PromptSlice.vst3/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents/Info.plist"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents"
+    copy "PromptSlice/PromptSlice.vst3/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.vst3/Contents/PkgInfo"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.app/Contents/MacOS"
+    copy "PromptSlice/PromptSlice.app/Contents/MacOS/PromptSlice", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.app/Contents/MacOS/PromptSlice"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.app/Contents/Resources"
+    copy "PromptSlice/PromptSlice.app/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.app/Contents/Resources/RecentFilesMenuTemplate.nib"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.app/Contents"
+    copy "PromptSlice/PromptSlice.app/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.app/Contents/Info.plist"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.app/Contents"
+    copy "PromptSlice/PromptSlice.app/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Components/PromptSlice.app/Contents/PkgInfo"
+  end
 end
