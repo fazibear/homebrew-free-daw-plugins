@@ -6,5 +6,8 @@ cask "sonatina-flute-vst" do
   desc "Sonatina Flute is a set of sampled flutes ."
   homepage "https://plugins4free.com/plugin/2312"
   depends_on :macos
-  artifact "Sonatina Flute.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Flute.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Flute.vst"
+  end
 end

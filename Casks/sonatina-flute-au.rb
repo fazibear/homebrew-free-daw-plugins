@@ -6,5 +6,8 @@ cask "sonatina-flute-au" do
   desc "Sonatina Flute is a set of sampled flutes ."
   homepage "https://plugins4free.com/plugin/2312"
   depends_on :macos
-  artifact "Sonatina Flute.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Sonatina Flute.component", "{{user}}/Library/Audio/Plug-Ins/Components/Sonatina Flute.component"
+  end
 end
