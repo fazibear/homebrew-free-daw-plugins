@@ -8,20 +8,10 @@ cask "montagem-808" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "Montagem 808.component", "{{user}}/Library/Audio/Plug-Ins/Components/Montagem 808.component"
+    copy "Montagem 808.component", "{{user}}/Library/Audio/Plug-Ins/Components/Montagem 808.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "Montagem 808.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Montagem 808.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources"
-    copy "INSTALL.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/INSTALL.txt"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources"
-    copy "TERMS.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/TERMS.txt"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem 808.app/Contents/MacOS"
-    copy "Montagem 808.app/Contents/MacOS/Montagem 808", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem 808.app/Contents/MacOS/Montagem 808"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem 808.app/Contents/Resources"
-    copy "Montagem 808.app/Contents/Resources/RecentFilesMenuTemplate.nib", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem 808.app/Contents/Resources/RecentFilesMenuTemplate.nib"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem 808.app/Contents"
-    copy "Montagem 808.app/Contents/Info.plist", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem 808.app/Contents/Info.plist"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem 808.app/Contents"
-    copy "Montagem 808.app/Contents/PkgInfo", "{{user}}/Library/Audio/Plug-Ins/Resources/Montagem 808.app/Contents/PkgInfo"
+    copy "Montagem 808.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Montagem 808.vst3", recursive: true
+    mkdir_p "{{user}}/Applications"
+    copy "Montagem 808.app", "{{user}}/Applications/Montagem 808.app", recursive: true
   end
 end
