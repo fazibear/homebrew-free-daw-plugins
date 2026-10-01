@@ -8,6 +8,6 @@ cask "gabcis-morphicphaser" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "MorphicPhaser.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/MorphicPhaser.vst3"
+    copy "MorphicPhaser.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/MorphicPhaser.vst3", recursive: true
   end
 end
