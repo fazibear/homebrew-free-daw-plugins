@@ -6,5 +6,8 @@ cask "tal-bassline-au" do
   desc "TAL-BassLine, a free virtual analog bass synthesizer especially made for bass, acid sounds and effects."
   homepage "https://plugins4free.com/plugin/688"
   depends_on :macos
-  artifact "TAL-BassLine.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "TAL-BassLine.component", "{{user}}/Library/Audio/Plug-Ins/Components/TAL-BassLine.component"
+  end
 end
