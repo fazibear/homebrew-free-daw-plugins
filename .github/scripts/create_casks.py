@@ -98,21 +98,23 @@ end
             extension = "VST"
         if not re.search(r"\.(vst3?|component|clap)$", bundle, re.I):
             bundle += {"VST": ".vst", "VST3": ".vst3", "Components": ".component", "AU": ".component", "CLAP": ".clap"}.get(extension, "")
-        plugin_dir = f"#{{Dir.home}}/Library/Audio/Plug-Ins/{extension}"
-        # Homebrew artifact targets must identify the installed artifact path,
-        # not just the containing directory. Directory targets collide when a
-        # cask installs multiple artifacts of the same plugin format.
+        plugin_dir = f"Library/Audio/Plug-Ins/{extension}"
         bundle_target = f"{plugin_dir}/{Path(bundle).name}"
-        install_lines = [f'  artifact "{bundle}", target: "{bundle_target}"']
-        # Non-bundle files in the same archive directory may be required data
-        # (e.g. Maize Sampler instrument folders). Install each with its path
-        # preserved relative to the plugin destination.
-        for member in related:
-            if member == bundle:
-                continue
+        resource_members = [member for member in related if member != bundle]
+        # ZIP archives are staged as one tree. A single postflight step avoids
+        # duplicate Generic Artifact staging paths while moving the bundle and
+        # retaining adjacent sampler resources at the format directory level.
+        install = f'''  postflight_steps do
+    mkdir_p "{{{{user}}}}/{plugin_dir}"
+    move "{bundle}", "{{{{user}}}}/{bundle_target}"
+'''
+        for member in resource_members:
             relative = member[len(prefix):] if prefix else member
-            install_lines.append(f'  artifact "{member}", target: "{plugin_dir}/{relative}"')
-        install = "\n".join(install_lines)
+            resource_target = f"{plugin_dir}/{relative}"
+            resource_parent = str(Path(resource_target).parent)
+            install += f'    mkdir_p "{{{{user}}}}/{resource_parent}"\n'
+            install += f'    copy "{member}", "{{{{user}}}}/{resource_target}"\n'
+        install += "  end"
     return name, f'''cask "{name}" do
   version "{candidate.get("version", "latest")}"
 {checksum}
