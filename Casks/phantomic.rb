@@ -7,5 +7,9 @@ cask "phantomic" do
   homepage "https://github.com/alexlarichev/phantomic-releases"
   depends_on :macos
   container type: :dmg
-  pkg "Install Phantomic.pkg"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    copy "Phantomic-mac.dmg.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/Phantomic-mac.dmg.vst3", recursive: true
+    system_command "installer", args: ["-pkg", "#staged_path/#Install Phantomic.pkg", "-target", "/"]
+  end
 end
