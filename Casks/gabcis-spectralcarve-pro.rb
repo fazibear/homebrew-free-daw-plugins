@@ -6,8 +6,5 @@ cask "gabcis-spectralcarve-pro" do
   desc "Free audio plugin"
   homepage "https://github.com/rcptr2/gabcis-spectralcarve-pro"
   depends_on :macos
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "SpectralCarve Pro.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/SpectralCarve Pro.vst3", recursive: true
-  end
+  artifact "SpectralCarve Pro.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/SpectralCarve Pro.vst3"
 end
