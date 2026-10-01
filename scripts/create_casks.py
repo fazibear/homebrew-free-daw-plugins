@@ -154,7 +154,7 @@ def archive_members(candidate, *, strict=False):
         print(f"warning: {message}", file=sys.stderr)
         return None
 
-def render(candidate, archive_fallback=None):
+def render(candidate):
     display = clean_name(candidate["name"])
     name = slug(display)
     if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
@@ -168,8 +168,6 @@ def render(candidate, archive_fallback=None):
         archive = candidate.get("archive_members")
         if archive is None and "archive_members" not in candidate:
             archive = archive_members(candidate)
-        if not archive:
-            archive = archive_fallback
         if not archive and filename.lower().endswith(".dmg"):
             archive = (filename, [], ".", None)
         if not archive:
@@ -202,12 +200,12 @@ def render(candidate, archive_fallback=None):
                 plugin_dir = f"Library/Audio/Plug-Ins/{extension}"
                 bundle_target = f"{plugin_dir}/{Path(plugin_bundle).name}"
                 install += f'    mkdir_p "{{{{user}}}}/{plugin_dir}"\n'
-                install += f'    move "{plugin_bundle}", "{{{{user}}}}/{bundle_target}"\n'
+                install += f'    copy "{plugin_bundle}", "{{{{user}}}}/{bundle_target}", recursive: true\n'
 
             for app_bundle in apps:
                 app_target = f"Applications/{Path(app_bundle).name}"
                 install += f'    mkdir_p "{{{{user}}}}/Applications"\n'
-                install += f'    copy "{app_bundle}", "{{{{user}}}}/{app_target}"\n'
+                install += f'    copy "{app_bundle}", "{{{{user}}}}/{app_target}", recursive: true\n'
 
             install += "  end"
     container = "  container type: :dmg\n" if filename.lower().endswith(".dmg") else ""
