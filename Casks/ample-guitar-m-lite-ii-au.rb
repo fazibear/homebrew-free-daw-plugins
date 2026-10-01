@@ -6,5 +6,6 @@ cask "ample-guitar-m-lite-ii-au" do
   desc "Ample Guitar M Lite II is a sampled acoustic guitar ."
   homepage "https://plugins4free.com/plugin/2233"
   depends_on :macos
-  dmg "AGML_2_3_1_Complete_Installer.dmg"
+  container type: :dmg
+  pkg "AGML_2_3_1_Complete_Installer.pkg"
 end
