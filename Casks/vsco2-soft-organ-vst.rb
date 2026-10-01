@@ -6,5 +6,8 @@ cask "vsco2-soft-organ-vst" do
   desc "VSCO2 Soft Organ is a sampled organ ."
   homepage "https://plugins4free.com/plugin/2727"
   depends_on :macos
-  artifact "VSCO2 Organ Soft.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "VSCO2 Organ Soft.vst", "{{user}}/Library/Audio/Plug-Ins/VST/VSCO2 Organ Soft.vst"
+  end
 end
