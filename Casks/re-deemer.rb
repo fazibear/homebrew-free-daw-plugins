@@ -8,20 +8,10 @@ cask "re-deemer" do
   depends_on :macos
   postflight_steps do
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
-    move "RE-DEEMER/RE-DEEMER.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/RE-DEEMER.clap"
+    copy "RE-DEEMER/RE-DEEMER.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/RE-DEEMER.clap", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "RE-DEEMER/RE-DEEMER.component", "{{user}}/Library/Audio/Plug-Ins/Components/RE-DEEMER.component"
+    copy "RE-DEEMER/RE-DEEMER.component", "{{user}}/Library/Audio/Plug-Ins/Components/RE-DEEMER.component", recursive: true
     mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    move "RE-DEEMER/RE-DEEMER.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/RE-DEEMER.vst3"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/LICENSE", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/LICENSE"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/install.sh", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/install.sh"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/VERSION.txt", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/VERSION.txt"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/MANUAL.md", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/MANUAL.md"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER"
-    copy "RE-DEEMER/PRESETS.md", "{{user}}/Library/Audio/Plug-Ins/Resources/RE-DEEMER/PRESETS.md"
+    copy "RE-DEEMER/RE-DEEMER.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/RE-DEEMER.vst3", recursive: true
   end
 end
