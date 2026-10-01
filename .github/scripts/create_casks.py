@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Create deduplicated casks from GitHub or Plugins4Free candidate JSON."""
 import json
+import os
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import urllib.parse
@@ -31,31 +34,53 @@ def existing():
     return result
 
 def archive_members(candidate):
-    if not candidate["filename"].lower().endswith(".zip"):
+    filename = candidate["filename"].lower()
+    if not (filename.endswith(".zip") or filename.endswith(".dmg")):
         return None
     try:
         request = urllib.request.Request(candidate["url"], headers={"User-Agent": "free-daw-cask-discovery"})
         with urllib.request.urlopen(request, timeout=30) as response:
-            data = response.read(100 * 1024 * 1024)
-        with tempfile.NamedTemporaryFile(suffix=".zip") as archive:
-            archive.write(data)
-            archive.flush()
-            with zipfile.ZipFile(archive.name) as zipped:
-                entries = [(item.filename.rstrip("/"), item.is_dir()) for item in zipped.infolist() if item.filename.rstrip("/")]
+            with tempfile.TemporaryDirectory() as temporary:
+                archive_path = Path(temporary) / candidate["filename"]
+                with archive_path.open("wb") as archive_file:
+                    shutil.copyfileobj(response, archive_file)
+                if filename.endswith(".zip"):
+                    with zipfile.ZipFile(archive_path) as zipped:
+                        entries = [(item.filename.rstrip("/"), item.is_dir()) for item in zipped.infolist() if item.filename.rstrip("/")]
+                else:
+                    mountpoint = Path(temporary) / "mounted"
+                    mountpoint.mkdir()
+                    subprocess.run(
+                        ["hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", str(mountpoint), str(archive_path)],
+                        check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                    )
+                    try:
+                        entries = []
+                        for root, directories, files in os.walk(mountpoint):
+                            relative_root = Path(root).relative_to(mountpoint)
+                            entries.extend(((relative_root / directory).as_posix(), True) for directory in directories)
+                            entries.extend(((relative_root / file).as_posix(), False) for file in files if file != ".DS_Store")
+                    finally:
+                        subprocess.run(["hdiutil", "detach", str(mountpoint)], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         names = [name for name, is_dir in entries if not is_dir]
         formats = {"AU": (".component",), "VST": (".vst",), "VST3": (".vst3",), "CLAP": (".clap",)}
         suffixes = formats.get(candidate.get("format"), (".pkg", ".vst3", ".vst", ".component", ".clap"))
         bundle_roots = []
         for name, is_dir in entries:
-            if is_dir and name.lower().endswith(suffixes):
+            if name.lower().endswith(".pkg"):
                 bundle_roots.append(name)
-            parts = name.split("/")
-            for index, part in enumerate(parts):
-                if part.lower().endswith(suffixes):
-                    root = "/".join(parts[:index + 1])
-                    if root not in bundle_roots:
-                        bundle_roots.append(root)
-        member = next((root for root in bundle_roots if root.lower().endswith(suffixes)), None)
+            elif is_dir and name.lower().endswith(suffixes):
+                bundle_roots.append(name)
+            if not is_dir:
+                parts = name.split("/")
+                for index, part in enumerate(parts):
+                    if part.lower().endswith(suffixes + (".pkg",)):
+                        root = "/".join(parts[:index + 1])
+                        if root not in bundle_roots:
+                            bundle_roots.append(root)
+        member = next((root for root in bundle_roots if root.lower().endswith(".pkg")), None)
+        if member is None:
+            member = next((root for root in bundle_roots if root.lower().endswith(suffixes)), None)
         if member is None:
             member = next((name for name in names if name.lower().endswith(suffixes)), None)
         if member:
@@ -88,8 +113,6 @@ def render(candidate):
     filename = candidate["filename"]
     if filename.lower().endswith(".pkg"):
         install = f'  pkg "{filename}"'
-    elif filename.lower().endswith(".dmg"):
-        install = f'  dmg "{filename}"'
     else:
         archive = archive_members(candidate)
         if not archive:
@@ -97,41 +120,32 @@ def render(candidate):
         bundle, related, prefix = archive
         if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
-            return name, f'''cask "{name}" do
-  version "{candidate.get("version", "latest")}"\n{checksum}
-  url "{candidate["url"]}"
-  name "{display}"
-  desc "{candidate.get("description", "Free audio plugin")}"
-  homepage "{candidate["homepage"]}"
-  depends_on :macos
-{install}
-end
-'''
-        formats = {".vst3": "VST3", ".vst": "VST", ".component": "Components", ".clap": "CLAP"}
-        extension = next((value for suffix, value in formats.items() if bundle.lower().endswith(suffix)), candidate.get("format", "VST3"))
-        if extension == "AU":
-            extension = "Components"
-        if extension == "VST":
-            extension = "VST"
-        if not re.search(r"\.(vst3?|component|clap)$", bundle, re.I):
-            bundle += {"VST": ".vst", "VST3": ".vst3", "Components": ".component", "AU": ".component", "CLAP": ".clap"}.get(extension, "")
-        plugin_dir = f"Library/Audio/Plug-Ins/{extension}"
-        bundle_target = f"{plugin_dir}/{Path(bundle).name}"
-        resource_members = [member for member in related if member != bundle]
-        # ZIP archives are staged as one tree. A single postflight step avoids
-        # duplicate Generic Artifact staging paths while moving the bundle and
-        # retaining adjacent sampler resources at the format directory level.
-        install = f'''  postflight_steps do
+        else:
+            formats = {".vst3": "VST3", ".vst": "VST", ".component": "Components", ".clap": "CLAP"}
+            extension = next((value for suffix, value in formats.items() if bundle.lower().endswith(suffix)), candidate.get("format", "VST3"))
+            if extension == "AU":
+                extension = "Components"
+            if extension == "VST":
+                extension = "VST"
+            if not re.search(r"\.(vst3?|component|clap)$", bundle, re.I):
+                bundle += {"VST": ".vst", "VST3": ".vst3", "Components": ".component", "AU": ".component", "CLAP": ".clap"}.get(extension, "")
+            plugin_dir = f"Library/Audio/Plug-Ins/{extension}"
+            bundle_target = f"{plugin_dir}/{Path(bundle).name}"
+            resource_members = [member for member in related if member != bundle]
+            # Archives are staged as one tree. A single postflight step avoids
+            # duplicate Generic Artifact staging paths while retaining resources.
+            install = f'''  postflight_steps do
     mkdir_p "{{{{user}}}}/{plugin_dir}"
     move "{bundle}", "{{{{user}}}}/{bundle_target}"
 '''
-        for member in resource_members:
-            relative = member[len(prefix):] if prefix else member
-            resource_target = f"{plugin_dir}/{relative}"
-            resource_parent = str(Path(resource_target).parent)
-            install += f'    mkdir_p "{{{{user}}}}/{resource_parent}"\n'
-            install += f'    copy "{member}", "{{{{user}}}}/{resource_target}"\n'
-        install += "  end"
+            for member in resource_members:
+                relative = member[len(prefix):] if prefix else member
+                resource_target = f"{plugin_dir}/{relative}"
+                resource_parent = str(Path(resource_target).parent)
+                install += f'    mkdir_p "{{{{user}}}}/{resource_parent}"\n'
+                install += f'    copy "{member}", "{{{{user}}}}/{resource_target}"\n'
+            install += "  end"
+    container = "  container type: :dmg\n" if filename.lower().endswith(".dmg") else ""
     return name, f'''cask "{name}" do
   version "{candidate.get("version", "latest")}"
 {checksum}
@@ -140,7 +154,7 @@ end
   desc "{candidate.get("description", "Free audio plugin")}"
   homepage "{candidate["homepage"]}"
   depends_on :macos
-{install}
+{container}{install}
 end
 '''
 
