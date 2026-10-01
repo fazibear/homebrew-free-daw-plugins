@@ -6,5 +6,8 @@ cask "iowa-alto-sax-au" do
   desc "Iowa Alto Sax is a sampled alto saxophone from the University of Iowa Electronic Music Studios."
   homepage "https://plugins4free.com/plugin/2513"
   depends_on :macos
-  artifact "Iowa Alto Sax.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Iowa Alto Sax.component", "{{user}}/Library/Audio/Plug-Ins/Components/Iowa Alto Sax.component"
+  end
 end
