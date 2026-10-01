@@ -6,5 +6,8 @@ cask "aspen-bass-trombone-au" do
   desc "Aspen Bass Trombone ."
   homepage "https://plugins4free.com/plugin/3317"
   depends_on :macos
-  artifact "Aspen Bass Trombone.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Aspen Bass Trombone.component", "{{user}}/Library/Audio/Plug-Ins/Components/Aspen Bass Trombone.component"
+  end
 end
