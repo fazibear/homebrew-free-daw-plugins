@@ -6,5 +6,8 @@ cask "sonatina-piano-vst" do
   desc "Sonatina Piano is a sampled Grand Piano ."
   homepage "https://plugins4free.com/plugin/2552"
   depends_on :macos
-  artifact "Sonatina Piano.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Piano.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Piano.vst"
+  end
 end
