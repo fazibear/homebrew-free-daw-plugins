@@ -6,5 +6,8 @@ cask "sonatina-glockenspiel-vst" do
   desc "Sonatina Glockenspiel is a sampled glockenspiel from the Sonatina Orchestra public domain library."
   homepage "https://plugins4free.com/plugin/2329"
   depends_on :macos
-  artifact "Sonatina Glockenspiel.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Sonatina Glockenspiel.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Sonatina Glockenspiel.vst"
+  end
 end
