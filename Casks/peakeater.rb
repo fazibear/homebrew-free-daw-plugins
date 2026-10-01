@@ -7,14 +7,8 @@ cask "peakeater" do
   homepage "https://github.com/vvvar/PeakEater"
   depends_on :macos
   container type: :dmg
-  postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
-    copy "peakeater.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/peakeater.clap", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    copy "peakeater.component", "{{user}}/Library/Audio/Plug-Ins/Components/peakeater.component", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/LV2"
-    copy "peakeater.lv2", "{{user}}/Library/Audio/Plug-Ins/LV2/peakeater.lv2", recursive: true
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
-    copy "peakeater.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/peakeater.vst3", recursive: true
-  end
+  artifact "peakeater.clap", target: "#{Dir.home}/Library/Audio/Plug-Ins/CLAP/peakeater.clap"
+  artifact "peakeater.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/peakeater.component"
+  artifact "peakeater.lv2", target: "#{Dir.home}/Library/Audio/Plug-Ins/LV2/peakeater.lv2"
+  artifact "peakeater.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3/peakeater.vst3"
 end
