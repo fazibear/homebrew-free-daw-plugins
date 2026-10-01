@@ -6,5 +6,8 @@ cask "spiral-generator-au" do
   desc "Spiral Generator is an oscilloscope-music inspired 3D synthesizer ."
   homepage "https://plugins4free.com/plugin/2778"
   depends_on :macos
-  artifact "SpiralGenerator.component/SpiralGenerator.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "SpiralGenerator.component/SpiralGenerator.component", "{{user}}/Library/Audio/Plug-Ins/Components/SpiralGenerator.component"
+  end
 end
