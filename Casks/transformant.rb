@@ -6,5 +6,8 @@ cask "transformant" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/transformant"
   depends_on :macos
-  artifact "AU/Transformant AUV3.app/Contents/PlugIns/auv3.appex/Contents/PlugIns/plugin.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    move "AU/Transformant AUV3.app/Contents/PlugIns/auv3.appex/Contents/PlugIns/plugin.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/plugin.vst3"
+  end
 end

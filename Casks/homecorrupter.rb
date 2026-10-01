@@ -6,5 +6,8 @@ cask "homecorrupter" do
   desc "Free audio plugin"
   homepage "https://github.com/igorski/homecorrupter"
   depends_on :macos
-  artifact "AU/Homecorrupter AUV3.app/Contents/PlugIns/auv3.appex/Contents/PlugIns/plugin.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    move "AU/Homecorrupter AUV3.app/Contents/PlugIns/auv3.appex/Contents/PlugIns/plugin.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/plugin.vst3"
+  end
 end

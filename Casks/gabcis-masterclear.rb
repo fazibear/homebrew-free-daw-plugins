@@ -6,5 +6,8 @@ cask "gabcis-masterclear" do
   desc "Free audio plugin"
   homepage "https://github.com/rcptr2/gabcis-masterclear"
   depends_on :macos
-  artifact "MasterClear.vst3", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST3"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST3"
+    move "MasterClear.vst3", "{{user}}/Library/Audio/Plug-Ins/VST3/MasterClear.vst3"
+  end
 end

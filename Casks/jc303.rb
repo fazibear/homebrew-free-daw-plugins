@@ -6,5 +6,8 @@ cask "jc303" do
   desc "Free audio plugin"
   homepage "https://github.com/midilab/jc303"
   depends_on :macos
-  artifact "JC-303_MacOS_Universal-0.13.0/CLAP/JC303.clap", target: "#{Dir.home}/Library/Audio/Plug-Ins/CLAP"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
+    move "JC-303_MacOS_Universal-0.13.0/CLAP/JC303.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/JC303.clap"
+  end
 end

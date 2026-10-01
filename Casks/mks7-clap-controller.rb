@@ -6,5 +6,14 @@ cask "mks7-clap-controller" do
   desc "Free audio plugin"
   homepage "https://github.com/kovaacs/mks7_clap_controller"
   depends_on :macos
-  artifact "MKS-7 Controller.clap", target: "#{Dir.home}/Library/Audio/Plug-Ins/CLAP"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
+    move "MKS-7 Controller.clap", "{{user}}/Library/Audio/Plug-Ins/CLAP/MKS-7 Controller.clap"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
+    copy "LICENSE", "{{user}}/Library/Audio/Plug-Ins/CLAP/LICENSE"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
+    copy "THIRD_PARTY_LICENSES.html", "{{user}}/Library/Audio/Plug-Ins/CLAP/THIRD_PARTY_LICENSES.html"
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/CLAP"
+    copy "README.md", "{{user}}/Library/Audio/Plug-Ins/CLAP/README.md"
+  end
 end
