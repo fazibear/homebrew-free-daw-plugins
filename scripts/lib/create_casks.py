@@ -126,6 +126,13 @@ def archive_members(candidate, *, strict=False):
         bundle_paths = [root for root in outermost_bundles if root.lower().endswith(all_suffixes)]
         app_paths = [root for root in outermost_bundles if root.lower().endswith(".app")]
         package_paths = [root for root in bundle_roots if root.lower().endswith(".pkg")]
+        if package_paths:
+            print(
+                f"Cask generator: {candidate['filename']} contains {len(package_paths)} package(s); "
+                "using the first package as the installer",
+                file=sys.stderr,
+            )
+            return (package_paths[0], [], str(Path(package_paths[0]).parent), None)
         print(
             f"Cask generator: {candidate['filename']} contains {len(bundle_paths)} plugin bundle(s) "
             f"{len(app_paths)} app bundle(s) and {len(package_paths)} package(s)",
@@ -170,7 +177,7 @@ def render(candidate):
             apps = archive.get("apps", [])
             packages = archive.get("packages", [])
             bundle = bundles[0] if bundles else (apps[0] if apps else (packages[0] if packages else ""))
-        if bundle.lower().endswith(".pkg") and filename.lower().endswith(".pkg"):
+        if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
         elif bundle.lower().endswith(".app") and not bundles and not packages:
             install = f'  app "{bundle}"'
@@ -193,8 +200,6 @@ def render(candidate):
                 app_target = f"Applications/{Path(app_bundle).name}"
                 install += f'    mkdir_p "{{{{user}}}}/Applications"\n'
                 install += f'    copy "{app_bundle}", "{{{{user}}}}/{app_target}", recursive: true\n'
-            for package in packages:
-                install += f'    system_command "installer", args: ["-pkg", "#{"staged_path"}/#{package}", "-target", "/"]\n'
             install += "  end"
     container = "  container type: :dmg\n" if filename.lower().endswith(".dmg") else ""
     return name, f'''cask "{name}" do
