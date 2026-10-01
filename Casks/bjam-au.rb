@@ -6,5 +6,8 @@ cask "bjam-au" do
   desc "BJAM is a Strat electric guitar rompler."
   homepage "https://plugins4free.com/plugin/3067"
   depends_on :macos
-  artifact "Mac AU/BJAM 2.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
+    move "Mac AU/BJAM 2.component", "{{user}}/Library/Audio/Plug-Ins/Components/BJAM 2.component"
+  end
 end

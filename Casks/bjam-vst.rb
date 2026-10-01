@@ -6,5 +6,8 @@ cask "bjam-vst" do
   desc "BJAM is a Strat electric guitar rompler."
   homepage "https://plugins4free.com/plugin/3067"
   depends_on :macos
-  artifact "Mac VST/BJAM 2.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST"
+  postflight_steps do
+    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
+    move "Mac VST/BJAM 2.vst", "{{user}}/Library/Audio/Plug-Ins/VST/BJAM 2.vst"
+  end
 end
