@@ -6,7 +6,7 @@ import sys
 import urllib.parse
 from html.parser import HTMLParser
 
-from cask_utils import http_request
+from .cask_utils import http_request
 
 DIRECTORY = "https://plugins4free.com/instruments?sort=random&os%5B%5D=allmacos&ajax=1"
 
@@ -125,7 +125,7 @@ def candidates_from_plugin_page(url, fallback_title=""):
     return candidates
 
 
-def main():
+def discover():
     print(f"Plugins4Free: fetching directory {DIRECTORY}", file=sys.stderr)
     with http_request(DIRECTORY, user_agent="Mozilla/5.0 (free-daw-cask-discovery)", timeout=30) as response:
         html = response.read(2_000_000).decode("utf-8", "ignore")
@@ -148,7 +148,11 @@ def main():
         except Exception:
             continue
     print(f"Plugins4Free: parsed {pages} plugin pages and found {len(candidates)} macOS download candidates", file=sys.stderr)
-    print(json.dumps(candidates))
+    return candidates
+
+
+def main():
+    print(json.dumps(discover()))
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Find and verify macOS plugin archive links from a plugin product page.
 
-Usage: python3 scripts/plugin_downloads.py https://vendor.example/plugin
+Used by source discovery modules in :mod:`scripts.lib`.
 Prints JSON records for links that look like macOS installers and respond with
 downloadable archive content. It does not download or install the files.
 """
@@ -104,7 +104,9 @@ def file_metadata(url):
         if not downloadable_type or not any(ext in suffix for ext in ARCHIVE_SUFFIXES):
             return None
         return {
-            "url": effective_url,
+            # Preserve the stable link from the product page. Some hosts redirect
+            # to signed URLs that expire shortly after the check.
+            "url": url,
             "filename": archive_name,
             "content_type": content_type,
             "content_length": response.headers.get("Content-Length"),

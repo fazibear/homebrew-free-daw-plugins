@@ -12,66 +12,13 @@ permissions:
 
 jobs:
   discover:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Parse Plugins4Free instruments directory and create casks
+      - name: Discover Plugins4Free candidates and open cask pull requests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 scripts/plugins4free_plugins.py | python3 scripts/create_casks.py
-      - name: Open one pull request per cask
-        env:
           GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
-        run: |
-          set -euo pipefail
-          base_branch="${GITHUB_REF_NAME}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          files="$(git ls-files --others --exclude-standard 'Casks/*.rb')"
-          test -n "$files"
-          groups_dir="$(mktemp -d)"
-          for file in $files; do
-            homepage="$(sed -n 's/^  homepage "\(.*\)"$/\1/p' "$file")"
-            key="$(printf '%s' "$homepage" | sed 's#/$##; s#.*plugin/##; s#[^A-Za-z0-9._-]#-#g')"
-            test -n "$key"
-            printf '%s\n' "$file" >> "$groups_dir/$key"
-          done
-          for group in "$groups_dir"/*; do
-            key="$(basename "$group")"
-            branch="automation/discovered-plugins4free-${key}"
-            group_files="$(tr '\n' ' ' < "$group")"
-            first_file="$(printf '%s\n' $group_files | head -n 1)"
-            plugin_name="$(sed -n 's/^  name "\(.*\)"$/\1/p' "$first_file")"
-            pr_title="Add ${plugin_name} casks"
-            matching_prs="$(gh pr list --repo "$GITHUB_REPOSITORY" --state all --search "in:title \"$pr_title\"" --limit 100 \
-              --json number,title,labels)"
-            invalid_pr="$(jq -r --arg title "$pr_title" \
-              'first(.[] | select(.title == $title and any(.labels[]; .name == "invalid")) | .number) // empty' \
-              <<< "$matching_prs")"
-            if [[ -n "$invalid_pr" ]]; then
-              echo "Skipping $plugin_name: PR #$invalid_pr titled '$pr_title' is marked invalid"
-              continue
-            fi
-            open_pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number // empty')"
-            if [[ -n "$open_pr" ]]; then
-              echo "Refreshing $key from the latest generator for open PR #$open_pr"
-            fi
-            git checkout -B "$branch" "origin/${base_branch}"
-            git add $group_files
-            homepage="$(sed -n 's/^  homepage "\(.*\)"$/\1/p' "$first_file")"
-            test -n "$plugin_name"
-            git commit -m "Add ${plugin_name} casks"
-            git push --force-with-lease origin "$branch"
-            body="Automated Plugins4Free discovery for ${plugin_name}."$'\n\n'"Free macOS audio plugin discovered from Plugins4Free. The PR includes separate casks for each available plugin format."$'\n\nHomepage: '"${homepage}"$'\n\nCasks:\n'
-            for file in $group_files; do
-              body+="- $(basename "$file" .rb)"$'\n'
-            done
-            body+=$'\nPlease review licensing, checksum, installer behavior, and Homebrew policy.'
-            if [[ -n "$open_pr" ]]; then
-              gh pr edit "$open_pr" --repo "$GITHUB_REPOSITORY" --title "$pr_title" --body "$body"
-            else
-              gh pr create --base "$base_branch" --head "$branch" --title "$pr_title" --body "$body" --label automation
-            fi
-          done
+        run: python3 scripts/discover_plugins4free.py

@@ -11,11 +11,11 @@ import sys
 from pathlib import Path
 import urllib.parse
 
-from cask_utils import stanza
-from create_casks import clean_name, slug
-from plugin_downloads import find_downloads
+from .cask_utils import stanza
+from .create_casks import clean_name, slug
+from .plugin_downloads import find_downloads
 
-CASKS = Path(__file__).resolve().parents[1] / "Casks"
+CASKS = Path(__file__).resolve().parents[2] / "Casks"
 
 
 def normalized_url(value):

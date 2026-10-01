@@ -5,7 +5,7 @@ import random
 import sys
 import urllib.parse
 
-from cask_utils import github_json, macos_installer_assets
+from .cask_utils import github_json, macos_installer_assets
 
 def candidate_from_repository(repo):
     print(f"GitHub: checking {repo['full_name']}", file=sys.stderr)
@@ -31,7 +31,7 @@ def candidate_from_repository(repo):
     }
 
 
-def main():
+def discover():
     repositories = {}
     for query in ("topic:audio-plugin macos", "topic:vst3 macos", "topic:clap-plugin macos"):
         print(f"GitHub: searching {query}", file=sys.stderr)
@@ -51,7 +51,11 @@ def main():
         if candidate:
             candidates.append(candidate)
     print(f"GitHub: found {len(repositories)} repositories and {len(candidates)} macOS release candidates", file=sys.stderr)
-    print(json.dumps(candidates))
+    return candidates
+
+
+def main():
+    print(json.dumps(discover()))
 
 if __name__ == "__main__":
     main()
