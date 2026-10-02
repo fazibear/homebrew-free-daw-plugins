@@ -7,4 +7,8 @@ cask "royotoms-vst" do
   homepage "https://plugins4free.com/plugin/2391"
   depends_on :macos
   artifact "Royotoms.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Royotoms.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Royotoms.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Royotoms.vst"]
+  end
 end
