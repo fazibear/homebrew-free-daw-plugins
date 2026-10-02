@@ -7,4 +7,8 @@ cask "project16-fingered-bass-au" do
   homepage "https://plugins4free.com/plugin/2319"
   depends_on :macos
   artifact "Project16 Fingered Bass.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Project16 Fingered Bass.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Project16 Fingered Bass.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Project16 Fingered Bass.component"]
+  end
 end
