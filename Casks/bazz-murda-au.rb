@@ -8,4 +8,9 @@ cask "bazz-murda-au" do
   depends_on :macos
   artifact "DC_Bazz_Murda_v1_8_FREE_OSX_AU_32bit/Bazz_Murda_v1_8_FREE_32bit.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Bazz_Murda_v1_8_FREE_32bit.component"
   artifact "DC_Bazz_Murda_v1_8_FREE_OSX_AU_64bit/Bazz_Murda_v1_8_FREE_64bit.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Bazz_Murda_v1_8_FREE_64bit.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Bazz_Murda_v1_8_FREE_32bit.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Bazz_Murda_v1_8_FREE_32bit.component"]
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Bazz_Murda_v1_8_FREE_64bit.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Bazz_Murda_v1_8_FREE_64bit.component"]
+  end
 end
