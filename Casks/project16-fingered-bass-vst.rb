@@ -7,4 +7,8 @@ cask "project16-fingered-bass-vst" do
   homepage "https://plugins4free.com/plugin/2319"
   depends_on :macos
   artifact "Project16 Fingered Bass.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Project16 Fingered Bass.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Project16 Fingered Bass.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Project16 Fingered Bass.vst"]
+  end
 end
