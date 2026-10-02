@@ -7,4 +7,8 @@ cask "project16-picked-bass-au" do
   homepage "https://plugins4free.com/plugin/2320"
   depends_on :macos
   artifact "Project16 Picked Bass.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Project16 Picked Bass.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Project16 Picked Bass.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Project16 Picked Bass.component"]
+  end
 end
