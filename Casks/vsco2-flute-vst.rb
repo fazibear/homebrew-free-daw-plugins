@@ -7,4 +7,8 @@ cask "vsco2-flute-vst" do
   homepage "https://plugins4free.com/plugin/2721"
   depends_on :macos
   artifact "VSCO2 Flute.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Flute.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Flute.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Flute.vst"]
+  end
 end
