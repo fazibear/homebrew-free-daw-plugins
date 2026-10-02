@@ -7,4 +7,8 @@ cask "divine-kit-vst" do
   homepage "https://plugins4free.com/plugin/2247"
   depends_on :macos
   artifact "Divine-Kit-multi.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Divine-Kit-multi.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Divine-Kit-multi.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Divine-Kit-multi.vst"]
+  end
 end
