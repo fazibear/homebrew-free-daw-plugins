@@ -8,4 +8,9 @@ cask "my-first-synth-vst" do
   depends_on :macos
   artifact "My First Synth.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/My First Synth.vst"
   artifact "My First Synth_x64.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/My First Synth_x64.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/My First Synth.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/My First Synth.vst"]
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/My First Synth_x64.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/My First Synth_x64.vst"]
+  end
 end
