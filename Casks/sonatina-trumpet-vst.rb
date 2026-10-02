@@ -7,4 +7,8 @@ cask "sonatina-trumpet-vst" do
   homepage "https://plugins4free.com/plugin/2305"
   depends_on :macos
   artifact "Sonatina Trumpet.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Trumpet.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Trumpet.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Trumpet.vst"]
+  end
 end
