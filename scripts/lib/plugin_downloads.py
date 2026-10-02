@@ -175,27 +175,47 @@ def find_downloads(page_url):
 
 def find_product_download(page_url, product_name):
     """Recover a broken installer URL from verified links for the same product."""
-    parser = LinkParser()
-    parser.feed(page_html(page_url))
     wanted = re.sub(r"[^a-z0-9]", "", product_name.lower())
-    for raw_url, title in parser.links:
-        target = urllib.parse.urljoin(page_url, raw_url)
-        parsed = urllib.parse.urlparse(target)
-        filename = urllib.parse.unquote(parsed.path.rsplit("/", 1)[-1])
-        if parsed.scheme not in ("http", "https") or not filename.lower().endswith(ARCHIVE_SUFFIXES):
+    homepage_host = urllib.parse.urlparse(page_url).hostname
+    pages = [(urllib.parse.urldefrag(page_url)[0], 0)]
+    visited = set()
+    # Follow only linked download pages on the same site, one level deep.
+    while pages and len(visited) < 6:
+        current_page, depth = pages.pop(0)
+        if current_page in visited:
             continue
-        if not MAC_MARKER.search(f"{title} {filename}"):
-            continue
-        found = download_product_name("", filename)
-        if re.sub(r"[^a-z0-9]", "", found.lower()) != wanted:
-            continue
+        visited.add(current_page)
         try:
-            metadata = file_metadata(target)
+            parser = LinkParser()
+            parser.feed(page_html(current_page))
         except Exception as error:
-            print(f"Skipped {target} - download check failed: {error}", file=sys.stderr)
+            print(f"Skipped {current_page} - product page check failed: {error}", file=sys.stderr)
             continue
-        if metadata:
-            return metadata
+        for raw_url, title in parser.links:
+            target = urllib.parse.urldefrag(urllib.parse.urljoin(current_page, raw_url))[0]
+            parsed = urllib.parse.urlparse(target)
+            if parsed.scheme not in ("http", "https"):
+                continue
+            filename = urllib.parse.unquote(parsed.path.rsplit("/", 1)[-1])
+            if not filename.lower().endswith(ARCHIVE_SUFFIXES):
+                if depth == 0 and parsed.hostname == homepage_host and (
+                    DOWNLOAD_MARKER.search(title) or re.search(r"/downloads?/?$", parsed.path, re.I)
+                ):
+                    if target not in visited and all(target != queued for queued, _ in pages):
+                        pages.append((target, 1))
+                continue
+            if not filename.lower().endswith(MAC_INSTALLER_SUFFIXES) and not MAC_MARKER.search(f"{title} {filename}"):
+                continue
+            found = download_product_name("", filename)
+            if re.sub(r"[^a-z0-9]", "", found.lower()) != wanted:
+                continue
+            try:
+                metadata = file_metadata(target)
+            except Exception as error:
+                print(f"Skipped {target} - download check failed: {error}", file=sys.stderr)
+                continue
+            if metadata:
+                return metadata
     return None
 
 
