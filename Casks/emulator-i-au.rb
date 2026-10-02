@@ -7,4 +7,8 @@ cask "emulator-i-au" do
   homepage "https://plugins4free.com/plugin/2970"
   depends_on :macos
   artifact "Emulator I Mac AU/Emulator I.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Emulator I.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Emulator I.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Emulator I.component"]
+  end
 end
