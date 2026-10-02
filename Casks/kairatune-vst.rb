@@ -7,4 +7,8 @@ cask "kairatune-vst" do
   homepage "https://plugins4free.com/plugin/1018"
   depends_on :macos
   artifact "Kairatune-1.2.5-VSTi-OSX/Kairatune.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Kairatune.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Kairatune.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Kairatune.vst"]
+  end
 end
