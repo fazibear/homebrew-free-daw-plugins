@@ -7,4 +7,8 @@ cask "tal-u-no-62-au" do
   homepage "https://plugins4free.com/plugin/687"
   depends_on :macos
   artifact "TAL-U-No-62.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/TAL-U-No-62.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/TAL-U-No-62.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/TAL-U-No-62.component"]
+  end
 end
