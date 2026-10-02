@@ -7,4 +7,8 @@ cask "kick-n-snare-ex-vst" do
   homepage "https://plugins4free.com/plugin/2963"
   depends_on :macos
   artifact "Kick n Snare EX/Kick n Snare EX.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Kick n Snare EX.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Kick n Snare EX.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Kick n Snare EX.vst"]
+  end
 end
