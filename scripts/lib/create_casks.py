@@ -61,6 +61,33 @@ def existing():
         print(f"warning: Homebrew catalog unavailable: {error}", file=sys.stderr)
     return result
 
+def unsigned_plugin_bundles(entries, directory):
+    """Inspect downloaded plugin signatures while their files are available."""
+    roots = set()
+    for name, _ in entries:
+        if is_metadata_path(name):
+            continue
+        parts = Path(name).parts
+        if Path(name).is_absolute() or ".." in parts:
+            raise ValueError(f"unsafe archive path: {name}")
+        for index, part in enumerate(parts):
+            if part.lower().endswith(tuple(PLUGIN_DIRS)):
+                roots.add(Path(*parts[:index + 1]).as_posix())
+                break
+    unsigned = []
+    for root in sorted(roots):
+        result = subprocess.run(
+            ["/usr/bin/codesign", "--display", str(directory / root)],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        if result.returncode == 0:
+            continue
+        if "code object is not signed at all" in result.stderr:
+            unsigned.append(root)
+        else:
+            raise RuntimeError(f"could not check signature of {root}: {result.stderr.strip()}")
+    return unsigned
+
 def archive_members(candidate, *, strict=False):
     filename = candidate["filename"].lower()
     if not (filename.endswith(".zip") or filename.endswith(".dmg")):
@@ -71,9 +98,19 @@ def archive_members(candidate, *, strict=False):
                 archive_path = Path(temporary) / candidate["filename"]
                 with archive_path.open("wb") as archive_file:
                     shutil.copyfileobj(response, archive_file)
+                unsigned_bundles = []
                 if filename.endswith(".zip"):
                     with zipfile.ZipFile(archive_path) as zipped:
                         entries = [(item.filename.rstrip("/"), item.is_dir()) for item in zipped.infolist() if item.filename.rstrip("/")]
+                    for name, _ in entries:
+                        if Path(name).is_absolute() or ".." in Path(name).parts:
+                            raise ValueError(f"unsafe archive path: {name}")
+                    extracted = Path(temporary) / "extracted"
+                    subprocess.run(
+                        ["/usr/bin/ditto", "-x", "-k", str(archive_path), str(extracted)],
+                        check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                    )
+                    unsigned_bundles = unsigned_plugin_bundles(entries, extracted)
                 else:
                     mountpoint = Path(temporary) / "mounted"
                     mountpoint.mkdir()
@@ -88,10 +125,10 @@ def archive_members(candidate, *, strict=False):
                             relative_root = Path(root).relative_to(mountpoint)
                             entries.extend(((relative_root / directory).as_posix(), True) for directory in directories)
                             entries.extend(((relative_root / file).as_posix(), False) for file in files)
+                        unsigned_bundles = unsigned_plugin_bundles(entries, mountpoint)
                     finally:
                         subprocess.run(["hdiutil", "detach", str(mountpoint)], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         entries = [(name, is_dir) for name, is_dir in entries if not is_metadata_path(name)]
-        names = [name for name, is_dir in entries if not is_dir]
         all_suffixes = tuple(PLUGIN_DIRS)
         app_suffixes = (".app",)
         bundle_suffixes = all_suffixes + app_suffixes
@@ -140,7 +177,8 @@ def archive_members(candidate, *, strict=False):
             f"{len(app_paths)} app bundle(s) and {len(package_paths)} package(s)",
             file=sys.stderr,
         )
-        return {"bundles": bundle_paths, "apps": app_paths, "packages": package_paths}
+        return {"bundles": bundle_paths, "apps": app_paths, "packages": package_paths,
+                "unsigned_bundles": [path for path in bundle_paths if path in unsigned_bundles]}
     except Exception as error:
         message = f"could not inspect {candidate['filename']}: {error}"
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:
@@ -151,6 +189,7 @@ def archive_members(candidate, *, strict=False):
         return None
 
 def render(candidate):
+    quarantine_steps = []
     display = clean_name(candidate["name"])
     name = slug(display)
     if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
@@ -170,6 +209,7 @@ def render(candidate):
             archive = (filename, [], ".", None)
         if not archive:
             return None, None
+        unsigned_bundles = archive.get("unsigned_bundles", []) if isinstance(archive, dict) else []
         if isinstance(archive, tuple):
             bundle, _, _, _ = archive
             bundles = [] if bundle.lower().endswith((".app", ".pkg")) else [bundle]
@@ -200,10 +240,19 @@ def render(candidate):
                 else:
                     target = f"#{{Dir.home}}/Library/Audio/Plug-Ins/{extension}/{Path(plugin_bundle).name}"
                 artifacts.append(f'  artifact "{plugin_bundle}", target: "{target}"')
+                if plugin_bundle in unsigned_bundles:
+                    sudo = ', sudo: true' if plugin_extension == ".aaxplugin" else ''
+                    quarantine_steps.append(
+                        f'    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "{target}"]'
+                        f'{sudo}, writable_paths: ["{target}"]'
+                    )
             for app_bundle in apps:
                 artifacts.append(f'  app "{app_bundle}", target: "#{{Dir.home}}/Applications/{Path(app_bundle).name}"')
             install = "\n".join(artifacts)
     container = "  container type: :dmg\n" if filename.lower().endswith(".dmg") else ""
+    postflight = ""
+    if quarantine_steps:
+        postflight = "\n\n  postflight_steps do\n" + "\n".join(quarantine_steps) + "\n  end"
     return name, f'''cask "{name}" do
   version "{candidate.get("version", "latest")}"
 {checksum}
@@ -212,7 +261,7 @@ def render(candidate):
   desc "{candidate.get("description", "Free audio plugin")}"
   homepage "{candidate["homepage"]}"
   depends_on :macos
-{container}{install}
+{container}{install}{postflight}
 end
 '''
 
