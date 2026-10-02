@@ -7,4 +7,8 @@ cask "aspen-trombone-vst" do
   homepage "https://plugins4free.com/plugin/3320"
   depends_on :macos
   artifact "Aspen Trombone.vst3.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Aspen Trombone.vst3.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Aspen Trombone.vst3.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Aspen Trombone.vst3.vst"]
+  end
 end
