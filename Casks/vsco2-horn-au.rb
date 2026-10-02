@@ -7,4 +7,8 @@ cask "vsco2-horn-au" do
   homepage "https://plugins4free.com/plugin/2555"
   depends_on :macos
   artifact "VSCO2 Horn.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Horn.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Horn.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Horn.component"]
+  end
 end

@@ -7,4 +7,8 @@ cask "vsco2-horn-vst" do
   homepage "https://plugins4free.com/plugin/2555"
   depends_on :macos
   artifact "VSCO2 Horn.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Horn.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Horn.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Horn.vst"]
+  end
 end
