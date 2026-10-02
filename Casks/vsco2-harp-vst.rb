@@ -7,4 +7,8 @@ cask "vsco2-harp-vst" do
   homepage "https://plugins4free.com/plugin/2554"
   depends_on :macos
   artifact "VSCO2 Harp.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Harp.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Harp.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Harp.vst"]
+  end
 end
