@@ -7,4 +7,8 @@ cask "project16-picked-bass-vst" do
   homepage "https://plugins4free.com/plugin/2320"
   depends_on :macos
   artifact "Project16 Picked Bass.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Project16 Picked Bass.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Project16 Picked Bass.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Project16 Picked Bass.vst"]
+  end
 end
