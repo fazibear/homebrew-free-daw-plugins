@@ -7,4 +7,8 @@ cask "iowa-tenor-trombone-vst" do
   homepage "https://plugins4free.com/plugin/2420"
   depends_on :macos
   artifact "Iowa Tenor Trombone.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Iowa Tenor Trombone.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Iowa Tenor Trombone.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Iowa Tenor Trombone.vst"]
+  end
 end
