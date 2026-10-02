@@ -3,6 +3,8 @@ import os
 import plistlib
 import re
 import sys
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[1]
@@ -225,6 +227,21 @@ def update_action(*, all_casks=False):
                "--title", title, "--body", body, "--label", "automation")
 
 
+@contextmanager
+def regeneration_worktree(ref):
+    """Discard only this PR's temporary checkout, including partial generation."""
+    original_directory = Path.cwd()
+    with tempfile.TemporaryDirectory(prefix="cask-regeneration-") as temporary:
+        worktree = Path(temporary) / "checkout"
+        run("git", "worktree", "add", "--detach", worktree, ref)
+        try:
+            os.chdir(worktree)
+            yield
+        finally:
+            os.chdir(original_directory)
+            run("git", "worktree", "remove", "--force", worktree)
+
+
 def changed_casks_for_pr(base_sha):
     """Select all surviving casks changed by the PR, independent of its branch name."""
     changed = run(
@@ -272,37 +289,37 @@ def regenerate_action():
 
             run("git", "fetch", "origin", f"refs/heads/{branch}:refs/remotes/origin/{branch}")
             run("git", "fetch", "origin", metadata["baseRefOid"])
-            run("git", "checkout", "-B", branch, f"origin/{branch}")
-            run("git", "branch", "--set-upstream-to", f"origin/{branch}", branch)
-            files = changed_casks_for_pr(metadata["baseRefOid"])
-            if not files:
-                raise RuntimeError(f"PR #{number}: no added or modified casks found in the PR diff")
-            for path in files:
-                if is_discovery:
-                    candidate = candidate_for(path)
-                    if candidate["filename"].lower().endswith(".pkg"):
-                        candidate["archive_members"] = None
+            with regeneration_worktree(f"origin/{branch}"):
+                files = changed_casks_for_pr(metadata["baseRefOid"])
+                if not files:
+                    raise RuntimeError(f"PR #{number}: no added or modified casks found in the PR diff")
+                changed_count = 0
+                for path in files:
+                    if is_discovery:
+                        candidate = candidate_for(path)
+                        if candidate["filename"].lower().endswith(".pkg"):
+                            candidate["archive_members"] = None
+                        else:
+                            candidate["archive_members"] = archive_members(candidate, strict=True)
+                        name, content = render(candidate)
+                        if not content:
+                            raise RuntimeError(f"{path}: current source candidate could not produce a cask")
+                        if name != path.stem:
+                            content = preserve_cask_token(content, path.stem)
+                        path.write_text(content)
                     else:
-                        candidate["archive_members"] = archive_members(candidate, strict=True)
-                    name, content = render(candidate)
-                    if not content:
-                        raise RuntimeError(f"{path}: current source candidate could not produce a cask")
-                    if name != path.stem:
-                        content = preserve_cask_token(content, path.stem)
-                    path.write_text(content)
-                else:
-                    status, detail = update(path, regenerate=True, all_casks=True)
-                    if status not in {"updated", "current"}:
-                        raise RuntimeError(f"{path}: {detail}")
-                    print(f"PR #{number}: {path.stem}: {status}: {detail}")
-            for filename in files:
-                run("ruby", "-c", filename)
-            run("git", "add", "--", *(str(path) for path in files))
-            changed = run("git", "diff", "--cached", "--name-only", "--", *(str(path) for path in files), capture=True).stdout.splitlines()
-            if changed:
-                run("git", "commit", "-m", "Regenerate cask PR")
-                run("git", "push", "origin", f"HEAD:refs/heads/{branch}")
-            print(f"PR #{number}: {'committed and pushed' if changed else 'generated cask matches PR branch'} ({len(changed)} changed cask file(s))")
+                        status, detail = update(path, regenerate=True, all_casks=True)
+                        if status not in {"updated", "current"}:
+                            raise RuntimeError(f"{path}: {detail}")
+                        print(f"PR #{number}: {path.stem}: {status}: {detail}")
+                    run("ruby", "-c", path)
+                    run("git", "add", "--", path)
+                    changed = run("git", "diff", "--cached", "--name-only", "--", path, capture=True).stdout.splitlines()
+                    if changed:
+                        run("git", "commit", "-m", f"Regenerate {path.stem} cask")
+                        run("git", "push", "origin", f"HEAD:refs/heads/{branch}")
+                        changed_count += 1
+                print(f"PR #{number}: {'committed and pushed' if changed_count else 'generated cask matches PR branch'} ({changed_count} changed cask file(s))")
         except Exception as error:
             failures.append((number, error))
             print(f"PR #{number}: failed: {error}", file=sys.stderr)
