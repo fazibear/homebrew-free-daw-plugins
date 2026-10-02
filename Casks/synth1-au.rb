@@ -7,4 +7,8 @@ cask "synth1-au" do
   homepage "https://plugins4free.com/plugin/245"
   depends_on :macos
   artifact "Synth1.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Synth1.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Synth1.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Synth1.component"]
+  end
 end
