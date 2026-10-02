@@ -7,4 +7,8 @@ cask "sonatina-tuba-au" do
   homepage "https://plugins4free.com/plugin/2308"
   depends_on :macos
   artifact "Sonatina Tuba.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Sonatina Tuba.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Sonatina Tuba.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Sonatina Tuba.component"]
+  end
 end
