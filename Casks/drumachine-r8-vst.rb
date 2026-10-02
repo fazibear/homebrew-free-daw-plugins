@@ -9,4 +9,9 @@ cask "drumachine-r8-vst" do
   container type: :dmg
   artifact "kl./DRECEIVE R8.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/DRECEIVE R8.vst"
   artifact "kl./DRUMACHINE R8.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/DRUMACHINE R8.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/DRECEIVE R8.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/DRECEIVE R8.vst"]
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/DRUMACHINE R8.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/DRUMACHINE R8.vst"]
+  end
 end
