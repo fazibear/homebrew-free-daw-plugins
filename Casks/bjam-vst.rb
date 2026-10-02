@@ -7,4 +7,8 @@ cask "bjam-vst" do
   homepage "https://plugins4free.com/plugin/3067"
   depends_on :macos
   artifact "Mac VST/BJAM 2.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/BJAM 2.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/BJAM 2.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/BJAM 2.vst"]
+  end
 end
