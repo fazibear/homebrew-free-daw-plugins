@@ -7,4 +7,8 @@ cask "vsco2-trombone-au" do
   homepage "https://plugins4free.com/plugin/2556"
   depends_on :macos
   artifact "VSCO2 Trombone.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Trombone.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Trombone.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Trombone.component"]
+  end
 end
