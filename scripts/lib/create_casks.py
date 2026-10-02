@@ -305,11 +305,18 @@ def main():
 def create_casks(candidates):
     known = existing()
     created = []
+    skipped_existing = []
+    unsupported = []
     for candidate in candidates:
         if "filename" not in candidate:
+            unsupported.append(candidate.get("name", "unnamed candidate"))
             continue
         name, content = render(candidate)
         if not name or name in known:
+            if name:
+                skipped_existing.append(name)
+            else:
+                unsupported.append(candidate["filename"])
             reason = "no installable plugin, app, or package found" if not name else f"{name} already exists locally or in Homebrew"
             print(f"Cask generator: skipped {candidate['filename']}: {reason}", file=sys.stderr)
             continue
@@ -317,6 +324,7 @@ def create_casks(candidates):
         known.add(name)
         created.append(name)
     print(f"Cask generator: created {len(created)} casks: {', '.join(sorted(created)) or 'none'}", file=sys.stderr)
+    return {"created": created, "existing": skipped_existing, "unsupported": unsupported}
 
 if __name__ == "__main__":
     main()

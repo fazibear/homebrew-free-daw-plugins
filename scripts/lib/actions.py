@@ -37,10 +37,13 @@ def create_url_pr_action():
     url = os.environ["CASK_SOURCE_URL"].strip()
     candidates = candidates_from_url(url, os.environ.get("CASK_PLUGIN_NAME", "").strip())
     before = set(_new_casks())
-    create_casks(candidates)
+    result = create_casks(candidates)
     paths = sorted(set(_new_casks()) - before)
     if not paths:
-        raise RuntimeError("No new casks generated: the plugin may already exist or its archive contains no supported payload")
+        if result["unsupported"]:
+            raise RuntimeError("No supported payload found for: " + ", ".join(result["unsupported"]))
+        print("No PR needed: casks already exist locally or in Homebrew: " + ", ".join(sorted(set(result["existing"]))))
+        return
     for path in paths:
         run("ruby", "-c", path)
     configure_git()
