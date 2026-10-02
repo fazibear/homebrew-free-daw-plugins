@@ -152,11 +152,19 @@ def archive_members(candidate, *, strict=False):
 
         # Keep top-level bundles as artifacts. A format bundle nested inside
         # an app or another plugin bundle belongs to that outer bundle.
-        plugin_roots = [
-            root for root in bundle_roots
-            if root.lower().endswith(all_suffixes)
-            and (candidate.get("source") != "plugins4free" or root.lower().endswith(suffixes))
-        ]
+        plugin_roots = [root for root in bundle_roots if root.lower().endswith(all_suffixes)]
+        if candidate.get("source") == "plugins4free":
+            matching_roots = [root for root in plugin_roots if root.lower().endswith(suffixes)]
+            if matching_roots:
+                plugin_roots = matching_roots
+            elif plugin_roots:
+                print(
+                    f"Cask generator: {candidate['filename']} is advertised as "
+                    f"{candidate.get('format', 'plugin')} but contains "
+                    f"{', '.join(sorted({Path(root).suffix for root in plugin_roots}))}; "
+                    "using the actual plugin bundles",
+                    file=sys.stderr,
+                )
         app_roots = [root for root in bundle_roots if root.lower().endswith(".app")]
         outermost_bundles = []
         for root in sorted(set(plugin_roots + app_roots), key=lambda path: (len(Path(path).parts), path)):
@@ -188,6 +196,36 @@ def archive_members(candidate, *, strict=False):
         print(f"warning: {message}", file=sys.stderr)
         return None
 
+def unique_install_bundles(paths):
+    """Choose one architecture variant for each case-insensitive destination."""
+    groups = {}
+    for path in sorted(set(paths)):
+        groups.setdefault(Path(path).name.casefold(), []).append(path)
+    selected = []
+    for variants in groups.values():
+        if len(variants) == 1:
+            selected.extend(variants)
+            continue
+
+        def preference(path):
+            if re.search(r"(?:^|[/ _-])universal2?(?:$|[/ _.-])", path, re.I):
+                return 3
+            if re.search(r"(?:^|[/ _-])(?:x64|x86_64|amd64|arm64|aarch64|64bit)(?:$|[/ _.-])", path, re.I):
+                return 2
+            if re.search(r"(?:^|[/ _-])(?:x86|i386|32bit)(?:$|[/ _.-])", path, re.I):
+                return 0
+            return 1
+
+        best = max(map(preference, variants))
+        winners = [path for path in variants if preference(path) == best]
+        if len(winners) != 1:
+            raise ValueError(f"ambiguous bundles share an install destination: {', '.join(variants)}")
+        selected.extend(winners)
+        print(f"Cask generator: selecting {winners[0]} instead of duplicate variants "
+              f"{', '.join(path for path in variants if path != winners[0])}", file=sys.stderr)
+    return selected
+
+
 def render(candidate):
     quarantine_steps = []
     display = clean_name(candidate["name"])
@@ -216,8 +254,8 @@ def render(candidate):
             apps = [bundle] if bundle.lower().endswith(".app") else []
             packages = [bundle] if bundle.lower().endswith(".pkg") else []
         else:
-            bundles = archive.get("bundles", [])
-            apps = archive.get("apps", [])
+            bundles = unique_install_bundles(archive.get("bundles", []))
+            apps = unique_install_bundles(archive.get("apps", []))
             packages = archive.get("packages", [])
             bundle = bundles[0] if bundles else (apps[0] if apps else (packages[0] if packages else ""))
         if not bundle:

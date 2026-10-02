@@ -79,6 +79,21 @@ def update_download(path):
             "homepage": homepage, "url": url, "filename": filename,
             "version": version, "digest": stanza(source, "sha256") or "",
         }
+        if filename.lower().endswith(".pkg"):
+            from .plugin_downloads import file_metadata, find_product_download
+            try:
+                verified = file_metadata(url)
+            except Exception:
+                verified = None
+            if not verified:
+                verified = find_product_download(homepage, candidate["name"])
+                if not verified:
+                    return "skip", "installer URL is invalid and no verified product download was found on its homepage"
+                candidate["url"] = verified["url"]
+                candidate["filename"] = verified["filename"]
+                candidate["digest"] = ""
+                match = re.search(r"(?<!\d)(\d+(?:\.\d+)+)(?!\d)", verified["filename"])
+                candidate["version"] = match.group(1) if match else "latest"
     token, content = render(candidate)
     if not token or not content:
         return "skip", "download contains no supported plugin, app, or package"

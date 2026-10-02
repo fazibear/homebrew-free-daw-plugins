@@ -173,6 +173,32 @@ def find_downloads(page_url):
     return results
 
 
+def find_product_download(page_url, product_name):
+    """Recover a broken installer URL from verified links for the same product."""
+    parser = LinkParser()
+    parser.feed(page_html(page_url))
+    wanted = re.sub(r"[^a-z0-9]", "", product_name.lower())
+    for raw_url, title in parser.links:
+        target = urllib.parse.urljoin(page_url, raw_url)
+        parsed = urllib.parse.urlparse(target)
+        filename = urllib.parse.unquote(parsed.path.rsplit("/", 1)[-1])
+        if parsed.scheme not in ("http", "https") or not filename.lower().endswith(ARCHIVE_SUFFIXES):
+            continue
+        if not MAC_MARKER.search(f"{title} {filename}"):
+            continue
+        found = download_product_name("", filename)
+        if re.sub(r"[^a-z0-9]", "", found.lower()) != wanted:
+            continue
+        try:
+            metadata = file_metadata(target)
+        except Exception as error:
+            print(f"Skipped {target} - download check failed: {error}", file=sys.stderr)
+            continue
+        if metadata:
+            return metadata
+    return None
+
+
 def main():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("url", help="plugin product-page URL")
