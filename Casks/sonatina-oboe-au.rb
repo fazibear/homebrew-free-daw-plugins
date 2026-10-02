@@ -6,8 +6,9 @@ cask "sonatina-oboe-au" do
   desc "Sonatina Oboe is a sampled oboe ."
   homepage "https://plugins4free.com/plugin/2314"
   depends_on :macos
+  artifact "Sonatina Oboe.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Sonatina Oboe.component"
+
   postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "Sonatina Oboe.component", "{{user}}/Library/Audio/Plug-Ins/Components/Sonatina Oboe.component"
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Sonatina Oboe.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Sonatina Oboe.component"]
   end
 end
