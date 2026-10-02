@@ -7,4 +7,8 @@ cask "tal-bassline-vst" do
   homepage "https://plugins4free.com/plugin/688"
   depends_on :macos
   artifact "TAL-BassLine.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/TAL-BassLine.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/TAL-BassLine.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/TAL-BassLine.vst"]
+  end
 end
