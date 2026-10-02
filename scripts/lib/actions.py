@@ -173,9 +173,7 @@ def update_action(*, all_casks=False):
     for path in sorted((ROOT / "Casks").glob("*.rb")):
         source = path.read_text()
         version = stanza(source, "version")
-        homepage = stanza(source, "homepage") or ""
-        url = stanza(source, "url") or ""
-        if not all_casks and (not version or version == "latest" or not homepage.startswith("https://github.com/") or "github.com/" not in url):
+        if not all_casks and (not version or version == "latest"):
             continue
         token = path.stem
         for suffix in ("-vst3", "-vst", "-au", "-clap", "-lv2", "-aax"):
@@ -217,7 +215,7 @@ def update_action(*, all_casks=False):
             old_version = stanza(old, "version")
             new_version = stanza(path.read_text(), "version")
             entries.append(f"- {path.stem}: {old_version} → {new_version}")
-        scope = "all casks using the shared archive renderer" if all_casks else "versioned casks using their GitHub Releases"
+        scope = "all casks using the shared archive renderer" if all_casks else "all casks with a specific version, using GitHub Releases or product download pages"
         body = f"Automated update check for {scope}.\n\nUpdated casks:\n" + "\n".join(entries) + "\n\nPlease review the updated versions, download URLs, and checksums."
         open_pr = _open_pr(branch)
         if open_pr:

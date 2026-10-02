@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update versioned GitHub casks from their repositories' latest releases."""
+"""Update versioned casks from GitHub releases or product download pages."""
 import hashlib
 import re
 import sys
@@ -58,13 +58,17 @@ def release_asset(release, old_url):
     return assets[0] if assets else None
 
 
-def update_download(path):
+def update_download(path, *, check_latest=False):
     """Regenerate non-versioned and non-GitHub casks with the shared renderer."""
     source = path.read_text()
     homepage = stanza(source, "homepage", required=True)
     if re.fullmatch(r"https://(?:www\.)?plugins4free\.com/plugin/[A-Za-z0-9_-]+/?", homepage):
         from .regenerate_casks import candidate_for
         candidate = candidate_for(path)
+        current = stanza(source, "version") or "latest"
+        match = re.search(r"(?<!\d)(\d+(?:\.\d+)+)(?!\d)", candidate["filename"])
+        if current != "latest":
+            candidate["version"] = match.group(1) if match else current
     else:
         version = stanza(source, "version") or "latest"
         url = stanza(source, "url", required=True).replace("#{version}", version)
@@ -79,6 +83,24 @@ def update_download(path):
             "homepage": homepage, "url": url, "filename": filename,
             "version": version, "digest": stanza(source, "sha256") or "",
         }
+        if check_latest:
+            from .plugin_downloads import find_product_download
+            verified = find_product_download(homepage, candidate["name"])
+            if verified:
+                match = re.search(r"(?<!\d)(\d+(?:\.\d+)+)(?!\d)", verified["filename"])
+                found_version = match.group(1) if match else None
+                if verified["url"] != url and not found_version:
+                    return "skip", "homepage download has no identifiable release version; cannot replace a pinned version"
+                if found_version and version_numbers(version) and version_numbers(found_version) and newer_version(found_version, version):
+                    return "current", f"current version {version} is newer than the homepage download {found_version}"
+                if verified["url"] != url:
+                    candidate["digest"] = ""
+                candidate["url"] = verified["url"]
+                candidate["filename"] = verified["filename"]
+                if found_version:
+                    candidate["version"] = found_version
+                filename = candidate["filename"]
+                url = candidate["url"]
         if filename.lower().endswith(".pkg"):
             from .plugin_downloads import file_metadata, find_product_download
             try:
@@ -119,7 +141,7 @@ def update(path, *, regenerate=False, all_casks=False):
     if not current or current == "latest":
         return "skip", "version is latest or missing"
     if not repository or "github.com/" not in (old_url or ""):
-        return "skip", "no GitHub release download source"
+        return update_download(path, check_latest=True)
 
     release = github_json(f"https://api.github.com/repos/{repository}/releases/latest")
     latest = re.sub(r"^v", "", release.get("tag_name") or "", flags=re.I)
