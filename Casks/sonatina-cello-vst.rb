@@ -7,4 +7,8 @@ cask "sonatina-cello-vst" do
   homepage "https://plugins4free.com/plugin/2299"
   depends_on :macos
   artifact "Sonatina Cello.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Cello.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Cello.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Cello.vst"]
+  end
 end
