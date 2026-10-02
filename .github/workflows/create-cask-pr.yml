@@ -1,0 +1,41 @@
+name: Create cask PR from URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Plugin website, GitHub repository, Plugins4Free page, or macOS download URL"
+        required: true
+        type: string
+      name:
+        description: "Optional plugin name (otherwise inferred from the source)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: create-cask-pr-from-url
+  cancel-in-progress: false
+
+jobs:
+  create:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          token: ${{ secrets.CASK_BOT_TOKEN }}
+      - name: Generate casks and open pull request
+        env:
+          GH_TOKEN: ${{ secrets.CASK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          CASK_BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          CASK_SOURCE_URL: ${{ inputs.url }}
+          CASK_PLUGIN_NAME: ${{ inputs.name }}
+        run: python3 scripts/create_cask_pr.py

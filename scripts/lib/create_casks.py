@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create deduplicated casks from GitHub or Plugins4Free candidate JSON."""
+"""Create deduplicated casks from normalized candidate JSON."""
 import json
 import os
 import re
@@ -29,6 +29,7 @@ PLUGIN_SUFFIXES_BY_FORMAT = {
     "VST": (".vst",),
     "VST3": (".vst3",),
     "CLAP": (".clap",),
+    "LV2": (".lv2",),
     "AAX": (".aaxplugin",),
 }
 RESOURCE_FORMATS = {
@@ -153,7 +154,7 @@ def archive_members(candidate, *, strict=False):
         # Keep top-level bundles as artifacts. A format bundle nested inside
         # an app or another plugin bundle belongs to that outer bundle.
         plugin_roots = [root for root in bundle_roots if root.lower().endswith(all_suffixes)]
-        if candidate.get("source") == "plugins4free":
+        if candidate.get("format") in PLUGIN_SUFFIXES_BY_FORMAT:
             matching_roots = [root for root in plugin_roots if root.lower().endswith(suffixes)]
             if matching_roots:
                 plugin_roots = matching_roots
@@ -230,9 +231,7 @@ def render(candidate):
     quarantine_steps = []
     display = clean_name(candidate["name"])
     name = slug(display)
-    if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
-        name = f"{name}-{candidate['format'].lower()}"
-    elif candidate.get("source") == "bpb-freebies" and candidate.get("format") in {"AU", "VST", "VST3", "CLAP", "LV2", "AAX"}:
+    if candidate.get("format") in PLUGIN_SUFFIXES_BY_FORMAT:
         name = f"{name}-{candidate['format'].lower()}"
     digest = candidate.get("digest", "")
     checksum = f'  sha256 "{digest}"' if re.fullmatch(r"[0-9a-f]{64}", digest) else "  sha256 :no_check"
@@ -266,8 +265,6 @@ def render(candidate):
         elif bundle.lower().endswith(".app") and not bundles and not packages:
             install = f'  app "{bundle}"'
         else:
-            if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
-                name = f"{slug(display)}-{candidate['format'].lower()}"
             artifacts = []
             for plugin_bundle in bundles:
                 plugin_extension = Path(plugin_bundle).suffix.lower()
@@ -313,9 +310,8 @@ def create_casks(candidates):
             continue
         name, content = render(candidate)
         if not name or name in known:
-            if candidate.get("source") == "bpb-freebies":
-                reason = "no installable plugin, app, or package found" if not name else f"{name} already exists locally or in Homebrew"
-                print(f"BPB: cask generator skipped {candidate['filename']}: {reason}", file=sys.stderr)
+            reason = "no installable plugin, app, or package found" if not name else f"{name} already exists locally or in Homebrew"
+            print(f"Cask generator: skipped {candidate['filename']}: {reason}", file=sys.stderr)
             continue
         (CASKS / f"{name}.rb").write_text(content)
         known.add(name)

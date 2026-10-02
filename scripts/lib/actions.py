@@ -29,6 +29,42 @@ def discover(source):
     create_casks(candidates)
 
 
+def create_url_pr_action():
+    """Generate only new casks and publish them together in one reviewable PR."""
+    import hashlib
+    from .url_candidates import candidates_from_url
+
+    url = os.environ["CASK_SOURCE_URL"].strip()
+    candidates = candidates_from_url(url, os.environ.get("CASK_PLUGIN_NAME", "").strip())
+    before = set(_new_casks())
+    create_casks(candidates)
+    paths = sorted(set(_new_casks()) - before)
+    if not paths:
+        raise RuntimeError("No new casks generated: the plugin may already exist or its archive contains no supported payload")
+    for path in paths:
+        run("ruby", "-c", path)
+    configure_git()
+    branch = "automation/discovered-url-" + hashlib.sha256(url.encode()).hexdigest()[:16]
+    base = os.environ.get("CASK_BASE_BRANCH", base_branch())
+    repo = repo_env()
+    title = f"Add {paths[0].stem}" + (" casks" if len(paths) > 1 else " cask")
+    body = "\n".join(["Generated from a manually supplied URL.", "", f"Source: {url}", "",
+                       "Casks:", *(f"- {path.stem}" for path in paths)])
+    run("git", "checkout", "-B", branch, f"origin/{base}")
+    run("git", "add", "--", *paths)
+    run("git", "commit", "-m", title)
+    run("git", "push", "--force-with-lease", "origin", branch)
+    number = _open_pr(branch)
+    with tempfile.TemporaryDirectory() as directory:
+        body_path = Path(directory) / "body.md"
+        body_path.write_text(body)
+        if number:
+            gh("pr", "edit", number, "--repo", repo, "--title", title, "--body-file", body_path)
+        else:
+            gh("pr", "create", "--repo", repo, "--base", base, "--head", branch,
+               "--title", title, "--body-file", body_path, "--label", "automation")
+
+
 def _cask_fields(path):
     from .cask_utils import stanza
     source = path.read_text()
@@ -288,7 +324,7 @@ def regenerate_action():
                                "--json", "author,baseRefName,baseRefOid,headRefName,headRepository,labels", token=gh_token)
             branch = metadata["headRefName"]
             is_discovery = branch.startswith(("automation/discovered-plugins4free-", "automation/discovered-github-"))
-            is_update = branch.startswith("automation/cask-updates-")
+            is_update = branch.startswith(("automation/cask-updates-", "automation/discovered-url-"))
             if not (is_discovery or is_update) or metadata.get("headRepository", {}).get("nameWithOwner") != repo or metadata.get("author", {}).get("login") != bot or not any(l.get("name") == "automation" for l in metadata.get("labels", [])):
                 raise RuntimeError(f"PR #{number} failed automation cask PR validation")
 

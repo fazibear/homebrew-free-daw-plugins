@@ -31,6 +31,19 @@ macOS may ask you to approve a plugin the first time you open it. Review the pro
 
 Plugins are provided by their original developers. Check each developer's license and support information before use.
 
+## Create a cask from a URL
+
+In GitHub **Actions → Create cask PR from URL → Run workflow**, enter a plugin
+website, GitHub repository, Plugins4Free plugin page, or direct macOS `.zip`,
+`.dmg`, or `.pkg` download URL. An optional name overrides the inferred plugin
+name. Website discovery checks direct downloads and linked download pages.
+
+The workflow inspects downloads with the shared generator and opens one PR for
+the new casks. Existing casks are skipped; no PR is opened if nothing new can be
+generated. Repeating the same URL updates its open PR. GitHub repository URLs
+use the latest release. The workflow requires the `CASK_BOT_TOKEN` secret used
+by the other cask automation workflows.
+
 ## Generate an Open Audio Stack registry
 
 Run the **Generate Open Audio Stack registry** GitHub Actions workflow to export
