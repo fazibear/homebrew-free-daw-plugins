@@ -7,4 +7,8 @@ cask "sonatina-horn-vst" do
   homepage "https://plugins4free.com/plugin/2307"
   depends_on :macos
   artifact "Sonatina Horn.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Horn.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Horn.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Horn.vst"]
+  end
 end
