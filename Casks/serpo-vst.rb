@@ -7,4 +7,8 @@ cask "serpo-vst" do
   homepage "https://plugins4free.com/plugin/2567"
   depends_on :macos
   artifact "Serpo - Mac - VST/Serpo.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Serpo.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Serpo.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Serpo.vst"]
+  end
 end
