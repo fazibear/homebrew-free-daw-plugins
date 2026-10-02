@@ -225,6 +225,19 @@ def update_action(*, all_casks=False):
                "--title", title, "--body", body, "--label", "automation")
 
 
+def changed_casks_for_pr(base_sha):
+    """Select all surviving casks changed by the PR, independent of its branch name."""
+    changed = run(
+        "git", "diff", "--diff-filter=AMR", "--name-only", "-z",
+        f"{base_sha}...HEAD", "--", "Casks/*.rb", capture=True,
+    ).stdout.split("\0")
+    return sorted({
+        Path(name) for name in changed
+        if name and Path(name).parent == Path("Casks")
+        and Path(name).suffix == ".rb" and Path(name).is_file()
+    })
+
+
 def regenerate_action():
     from .regenerate_casks import candidate_for
     from .create_casks import archive_members, render
@@ -250,7 +263,7 @@ def regenerate_action():
     for number in numbers:
         try:
             metadata = gh_json("pr", "view", str(number), "--repo", repo,
-                               "--json", "author,baseRefName,headRefName,headRepository,labels", token=gh_token)
+                               "--json", "author,baseRefName,baseRefOid,headRefName,headRepository,labels", token=gh_token)
             branch = metadata["headRefName"]
             is_discovery = branch.startswith(("automation/discovered-plugins4free-", "automation/discovered-github-"))
             is_update = branch.startswith("automation/cask-updates-")
@@ -258,15 +271,12 @@ def regenerate_action():
                 raise RuntimeError(f"PR #{number} failed automation cask PR validation")
 
             run("git", "fetch", "origin", f"refs/heads/{branch}:refs/remotes/origin/{branch}")
+            run("git", "fetch", "origin", metadata["baseRefOid"])
             run("git", "checkout", "-B", branch, f"origin/{branch}")
             run("git", "branch", "--set-upstream-to", f"origin/{branch}", branch)
-            cask_token = branch.removeprefix("automation/discovered-plugins4free-").removeprefix("automation/discovered-github-").removeprefix("automation/cask-updates-")
-            files = [Path("Casks") / f"{cask_token}.rb"]
-            if not files[0].is_file():
-                candidates = run("git", "ls-tree", "-r", "--name-only", "HEAD", "--", "Casks", capture=True).stdout.splitlines()
-                files = [Path(name) for name in candidates if Path(name).stem == cask_token]
+            files = changed_casks_for_pr(metadata["baseRefOid"])
             if not files:
-                raise RuntimeError(f"PR #{number}: could not find cask for automation branch {branch}")
+                raise RuntimeError(f"PR #{number}: no added or modified casks found in the PR diff")
             for path in files:
                 if is_discovery:
                     candidate = candidate_for(path)
