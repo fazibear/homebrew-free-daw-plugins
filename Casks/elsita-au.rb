@@ -7,4 +7,8 @@ cask "elsita-au" do
   homepage "https://plugins4free.com/plugin/3125"
   depends_on :macos
   artifact "Elsita-V (Mac AU)/Elsita.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Elsita.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Elsita.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Elsita.component"]
+  end
 end
