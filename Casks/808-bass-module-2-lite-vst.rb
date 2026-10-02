@@ -7,4 +7,8 @@ cask "808-bass-module-2-lite-vst" do
   homepage "https://plugins4free.com/plugin/2709"
   depends_on :macos
   artifact "808 Bass Module 2 Lite v2.0 MAC VST/808 BM2 lite.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/808 BM2 lite.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/808 BM2 lite.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/808 BM2 lite.vst"]
+  end
 end
