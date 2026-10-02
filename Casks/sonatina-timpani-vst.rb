@@ -7,4 +7,8 @@ cask "sonatina-timpani-vst" do
   homepage "https://plugins4free.com/plugin/2331"
   depends_on :macos
   artifact "Sonatina Timpani.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Timpani.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Timpani.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Timpani.vst"]
+  end
 end
