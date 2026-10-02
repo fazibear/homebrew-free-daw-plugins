@@ -7,4 +7,8 @@ cask "fretless-zither-au" do
   homepage "https://plugins4free.com/plugin/1710"
   depends_on :macos
   artifact "Zither_v4_AU.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Zither_v4_AU.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Zither_v4_AU.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Zither_v4_AU.component"]
+  end
 end
