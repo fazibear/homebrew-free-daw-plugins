@@ -7,4 +7,8 @@ cask "awesome-piano-au" do
   homepage "https://plugins4free.com/plugin/2927"
   depends_on :macos
   artifact "Awesome Piano (Mac AU)/Awesome Piano.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Awesome Piano.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Awesome Piano.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Awesome Piano.component"]
+  end
 end
