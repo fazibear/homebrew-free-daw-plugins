@@ -1,13 +1,14 @@
 cask "kick-n-snare-ex-au" do
   version "latest"
   sha256 :no_check
-  url "https://alt1.plugins4free.com/get_plug/KicknSnareEX_MacAU.zip"
+  url "https://plugins4free.com/get_plug/KicknSnareEX_MacAU.zip"
   name "Kick-n-Snare EX"
   desc "Kick-n-Snare EX is a drum rompler for EDM ."
   homepage "https://plugins4free.com/plugin/2963"
   depends_on :macos
+  artifact "Kick n Snare EX/Kick n Snare EX.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Kick n Snare EX.component"
+
   postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/Components"
-    move "Kick n Snare EX/Kick n Snare EX.component", "{{user}}/Library/Audio/Plug-Ins/Components/Kick n Snare EX.component"
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Kick n Snare EX.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Kick n Snare EX.component"]
   end
 end
