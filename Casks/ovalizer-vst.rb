@@ -7,4 +7,8 @@ cask "ovalizer-vst" do
   homepage "https://plugins4free.com/plugin/2938"
   depends_on :macos
   artifact "Ovalizer.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Ovalizer.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Ovalizer.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Ovalizer.vst"]
+  end
 end
