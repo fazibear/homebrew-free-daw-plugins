@@ -7,4 +7,8 @@ cask "aspen-cornet-au" do
   homepage "https://plugins4free.com/plugin/3319"
   depends_on :macos
   artifact "Aspen Cornet.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Aspen Cornet.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Aspen Cornet.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Aspen Cornet.component"]
+  end
 end
