@@ -7,4 +7,8 @@ cask "tal-u-no-62-vst" do
   homepage "https://plugins4free.com/plugin/687"
   depends_on :macos
   artifact "TAL-U-No-62.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/TAL-U-No-62.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/TAL-U-No-62.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/TAL-U-No-62.vst"]
+  end
 end
