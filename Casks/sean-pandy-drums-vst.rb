@@ -8,4 +8,9 @@ cask "sean-pandy-drums-vst" do
   depends_on :macos
   artifact "spd-multi-osx-vst/Sean Pandy Drums Multi.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sean Pandy Drums Multi.vst"
   artifact "spd-osx-vst/Sean Pandy Drums.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sean Pandy Drums.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sean Pandy Drums Multi.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sean Pandy Drums Multi.vst"]
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sean Pandy Drums.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sean Pandy Drums.vst"]
+  end
 end
