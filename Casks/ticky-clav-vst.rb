@@ -8,4 +8,8 @@ cask "ticky-clav-vst" do
   depends_on :macos
   container type: :dmg
   artifact "VST/TickyClav.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/TickyClav.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/TickyClav.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/TickyClav.vst"]
+  end
 end
