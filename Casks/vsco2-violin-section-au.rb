@@ -7,4 +7,8 @@ cask "vsco2-violin-section-au" do
   homepage "https://plugins4free.com/plugin/2539"
   depends_on :macos
   artifact "VSCO2 Violin Section.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Violin Section.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Violin Section.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Violin Section.component"]
+  end
 end
