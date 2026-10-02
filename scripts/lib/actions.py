@@ -255,6 +255,13 @@ def changed_casks_for_pr(base_sha, head_ref="HEAD"):
     })
 
 
+def push_regenerated_pr(branch, expected_sha):
+    """Publish rewritten history only if the remote PR has not changed."""
+    run("git", "push", f"--force-with-lease=refs/heads/{branch}:{expected_sha}",
+        "origin", f"HEAD:refs/heads/{branch}")
+    return run("git", "rev-parse", "HEAD", capture=True).stdout.strip()
+
+
 def regenerate_action():
     from .regenerate_casks import candidate_for
     from .create_casks import archive_members, render
@@ -287,12 +294,23 @@ def regenerate_action():
             if not (is_discovery or is_update) or metadata.get("headRepository", {}).get("nameWithOwner") != repo or metadata.get("author", {}).get("login") != bot or not any(l.get("name") == "automation" for l in metadata.get("labels", [])):
                 raise RuntimeError(f"PR #{number} failed automation cask PR validation")
 
-            run("git", "fetch", "origin", f"refs/heads/{branch}:refs/remotes/origin/{branch}")
+            run("git", "fetch", "origin", f"+refs/heads/{branch}:refs/remotes/origin/{branch}",
+                "+refs/heads/main:refs/remotes/origin/main")
             run("git", "fetch", "origin", metadata["baseRefOid"])
             with regeneration_worktree(f"origin/{branch}"):
+                expected_sha = run("git", "rev-parse", "HEAD", capture=True).stdout.strip()
                 files = changed_casks_for_pr(metadata["baseRefOid"])
                 if not files:
                     raise RuntimeError(f"PR #{number}: no added or modified casks found in the PR diff")
+                try:
+                    run("git", "rebase", "origin/main")
+                except Exception:
+                    run("git", "rebase", "--abort", check=False)
+                    raise
+                rebased = run("git", "rev-parse", "HEAD", capture=True).stdout.strip() != expected_sha
+                if rebased:
+                    expected_sha = push_regenerated_pr(branch, expected_sha)
+                    print(f"PR #{number}: rebased onto origin/main and pushed")
                 changed_count = 0
                 for path in files:
                     if is_discovery:
@@ -317,7 +335,7 @@ def regenerate_action():
                     changed = run("git", "diff", "--cached", "--name-only", "--", path, capture=True).stdout.splitlines()
                     if changed:
                         run("git", "commit", "-m", f"Regenerate {path.stem} cask")
-                        run("git", "push", "origin", f"HEAD:refs/heads/{branch}")
+                        expected_sha = push_regenerated_pr(branch, expected_sha)
                         changed_count += 1
                 print(f"PR #{number}: {'committed and pushed' if changed_count else 'generated cask matches PR branch'} ({changed_count} changed cask file(s))")
         except Exception as error:
