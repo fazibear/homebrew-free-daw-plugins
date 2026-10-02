@@ -7,10 +7,8 @@ cask "vst-speek-au" do
   homepage "https://plugins4free.com/plugin/1863"
   depends_on :macos
   artifact "AUSpeek3-x64/AUSpeek3.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"
-  artifact "AUSpeek3/AUSpeek3.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"
 
   postflight_steps do
-    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"]
     run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/AUSpeek3.component"]
   end
 end
