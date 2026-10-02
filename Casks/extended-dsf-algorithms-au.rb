@@ -7,4 +7,8 @@ cask "extended-dsf-algorithms-au" do
   homepage "https://plugins4free.com/plugin/3713"
   depends_on :macos
   artifact "MacOSX/Extended DSF Algorithms AU.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Extended DSF Algorithms AU.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Extended DSF Algorithms AU.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Extended DSF Algorithms AU.component"]
+  end
 end
