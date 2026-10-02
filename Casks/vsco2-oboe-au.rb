@@ -7,4 +7,8 @@ cask "vsco2-oboe-au" do
   homepage "https://plugins4free.com/plugin/2724"
   depends_on :macos
   artifact "VSCO2 Oboe.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Oboe.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Oboe.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Oboe.component"]
+  end
 end
