@@ -8,4 +8,9 @@ cask "sean-pandy-drums-au" do
   depends_on :macos
   artifact "spd-multi-osx-au/Sean Pandy Drums Multi.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Sean Pandy Drums Multi.component"
   artifact "spd-osx-au/Sean Pandy Drums.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Sean Pandy Drums.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Sean Pandy Drums Multi.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Sean Pandy Drums Multi.component"]
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Sean Pandy Drums.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Sean Pandy Drums.component"]
+  end
 end
