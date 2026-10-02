@@ -7,4 +7,8 @@ cask "the-grand-au" do
   homepage "https://plugins4free.com/plugin/2766"
   depends_on :macos
   artifact "DSK The Grand - macAU/DSK The Grand.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/DSK The Grand.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/DSK The Grand.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/DSK The Grand.component"]
+  end
 end
