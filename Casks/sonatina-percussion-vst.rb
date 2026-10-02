@@ -7,4 +7,8 @@ cask "sonatina-percussion-vst" do
   homepage "https://plugins4free.com/plugin/2330"
   depends_on :macos
   artifact "Sonatina Percussion.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Percussion.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Percussion.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Percussion.vst"]
+  end
 end
