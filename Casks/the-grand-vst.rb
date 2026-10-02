@@ -7,4 +7,8 @@ cask "the-grand-vst" do
   homepage "https://plugins4free.com/plugin/2766"
   depends_on :macos
   artifact "DSK The Grand - macVST/DSK The Grand.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/DSK The Grand.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/DSK The Grand.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/DSK The Grand.vst"]
+  end
 end
