@@ -26,7 +26,7 @@ def candidate_for(path):
         candidate = next((item for item in candidates if item.get("format") == plugin_format), None)
         if candidate is None:
             raise ValueError(f"{path}: Plugins4Free page has no current {plugin_format} download")
-    elif (repository := github_repository(homepage)):
+    elif (repository := github_repository(stanza(source, "url") or "") or github_repository(homepage)):
         parts = repository.split("/")
         repo = {"full_name": "/".join(parts[:2]), "name": parts[1]}
         candidate = candidate_from_repository(repo)

@@ -111,7 +111,7 @@ def update(path, *, regenerate=False, all_casks=False):
     old_url = stanza(source, "url")
     name = stanza(source, "name")
     description = stanza(source, "desc")
-    repository = github_repository(homepage or "")
+    repository = github_repository(old_url or "") or github_repository(homepage or "")
     if all_casks and (
         not current or current == "latest" or not repository or "github.com/" not in (old_url or "")
     ):
