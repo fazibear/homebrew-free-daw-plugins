@@ -7,4 +7,8 @@ cask "sonatina-oboe-vst" do
   homepage "https://plugins4free.com/plugin/2314"
   depends_on :macos
   artifact "Sonatina Oboe.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Oboe.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Oboe.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Oboe.vst"]
+  end
 end
