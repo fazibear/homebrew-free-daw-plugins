@@ -7,4 +7,8 @@ cask "sonatina-viola-vst" do
   homepage "https://plugins4free.com/plugin/2298"
   depends_on :macos
   artifact "Sonatina Viola.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Viola.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Viola.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Sonatina Viola.vst"]
+  end
 end
