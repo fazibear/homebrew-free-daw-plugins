@@ -7,4 +7,8 @@ cask "octasine-vst" do
   homepage "https://plugins4free.com/plugin/3474"
   depends_on :macos
   artifact "OctaSine.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/OctaSine.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/OctaSine.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/OctaSine.vst"]
+  end
 end
