@@ -8,4 +8,8 @@ cask "harsh-digital-nose-au" do
   depends_on :macos
   container type: :dmg
   artifact "Harsh Digital Nose.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Harsh Digital Nose.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Harsh Digital Nose.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Harsh Digital Nose.component"]
+  end
 end
