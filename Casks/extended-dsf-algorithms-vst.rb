@@ -7,4 +7,8 @@ cask "extended-dsf-algorithms-vst" do
   homepage "https://plugins4free.com/plugin/3713"
   depends_on :macos
   artifact "MacOSX/Extended DSF Algorithms VST.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Extended DSF Algorithms VST.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Extended DSF Algorithms VST.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Extended DSF Algorithms VST.vst"]
+  end
 end
