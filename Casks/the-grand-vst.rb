@@ -1,15 +1,14 @@
 cask "the-grand-vst" do
   version "latest"
   sha256 :no_check
-  url "https://alt1.plugins4free.com/get_plug/DSK_The_Grand_-_macVST.zip"
+  url "https://plugins4free.com/get_plug/DSK_The_Grand_-_macVST.zip"
   name "The Grand"
   desc "The Grand is a sampled Grand Piano ."
   homepage "https://plugins4free.com/plugin/2766"
   depends_on :macos
+  artifact "DSK The Grand - macVST/DSK The Grand.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/DSK The Grand.vst"
+
   postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    move "DSK The Grand - macVST/DSK The Grand.vst", "{{user}}/Library/Audio/Plug-Ins/VST/DSK The Grand.vst"
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    copy "DSK The Grand - macVST/DSK Music - Readme.txt", "{{user}}/Library/Audio/Plug-Ins/VST/DSK Music - Readme.txt"
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/DSK The Grand.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/DSK The Grand.vst"]
   end
 end
