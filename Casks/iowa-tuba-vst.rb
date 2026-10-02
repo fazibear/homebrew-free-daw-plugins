@@ -7,4 +7,8 @@ cask "iowa-tuba-vst" do
   homepage "https://plugins4free.com/plugin/2422"
   depends_on :macos
   artifact "Iowa Tuba.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Iowa Tuba.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Iowa Tuba.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Iowa Tuba.vst"]
+  end
 end
