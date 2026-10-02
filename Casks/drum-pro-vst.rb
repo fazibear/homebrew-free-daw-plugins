@@ -7,4 +7,8 @@ cask "drum-pro-vst" do
   homepage "https://plugins4free.com/plugin/2225"
   depends_on :macos
   artifact "Drum Pro Mac VST/DRUM PRO.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/DRUM PRO.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/DRUM PRO.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/DRUM PRO.vst"]
+  end
 end
