@@ -7,4 +7,8 @@ cask "aspen-trumpet-1-au" do
   homepage "https://plugins4free.com/plugin/3321"
   depends_on :macos
   artifact "Aspen Trumpet 1.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Aspen Trumpet 1.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Aspen Trumpet 1.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Aspen Trumpet 1.component"]
+  end
 end
