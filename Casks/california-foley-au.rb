@@ -7,4 +7,8 @@ cask "california-foley-au" do
   homepage "https://plugins4free.com/plugin/1885"
   depends_on :macos
   artifact "California Foley Demo Mac AU/California Foley Demo Mac AU.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/California Foley Demo Mac AU.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/California Foley Demo Mac AU.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/California Foley Demo Mac AU.component"]
+  end
 end

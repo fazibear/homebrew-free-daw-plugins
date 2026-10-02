@@ -7,4 +7,8 @@ cask "california-foley-vst" do
   homepage "https://plugins4free.com/plugin/1885"
   depends_on :macos
   artifact "California Foley Demo Mac vst/California Foley Demo Mac vst.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/California Foley Demo Mac vst.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/California Foley Demo Mac vst.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/California Foley Demo Mac vst.vst"]
+  end
 end
