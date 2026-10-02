@@ -6,8 +6,9 @@ cask "vsco2-old-trombone-vst" do
   desc "VSCO2 Old Trombone is a sampled trombone ."
   homepage "https://plugins4free.com/plugin/2725"
   depends_on :macos
+  artifact "VSCO2 Old Trombone.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Old Trombone.vst"
+
   postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    move "VSCO2 Old Trombone.vst", "{{user}}/Library/Audio/Plug-Ins/VST/VSCO2 Old Trombone.vst"
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Old Trombone.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/VSCO2 Old Trombone.vst"]
   end
 end
