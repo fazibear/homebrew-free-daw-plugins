@@ -7,4 +7,8 @@ cask "royotoms-au" do
   homepage "https://plugins4free.com/plugin/2391"
   depends_on :macos
   artifact "Royotoms.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Royotoms.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Royotoms.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Royotoms.component"]
+  end
 end
