@@ -7,4 +7,8 @@ cask "miscellania-ii-holiday-bells-au" do
   homepage "https://plugins4free.com/plugin/1833"
   depends_on :macos
   artifact "Misc2_v1_AU.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Misc2_v1_AU.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Misc2_v1_AU.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Misc2_v1_AU.component"]
+  end
 end
