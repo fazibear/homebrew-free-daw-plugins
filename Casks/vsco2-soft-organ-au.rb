@@ -7,4 +7,8 @@ cask "vsco2-soft-organ-au" do
   homepage "https://plugins4free.com/plugin/2727"
   depends_on :macos
   artifact "VSCO2 Organ Soft.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Organ Soft.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Organ Soft.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Organ Soft.component"]
+  end
 end
