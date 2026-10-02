@@ -7,4 +7,8 @@ cask "combat-loop-drum-machine-vst" do
   homepage "https://plugins4free.com/plugin/1846"
   depends_on :macos
   artifact "COMBAT LOOP DRUM MACHINE Mac vst/COMBAT LOOP DRUM MACHINE.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/COMBAT LOOP DRUM MACHINE.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/COMBAT LOOP DRUM MACHINE.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/COMBAT LOOP DRUM MACHINE.vst"]
+  end
 end
