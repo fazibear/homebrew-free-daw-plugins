@@ -7,4 +7,8 @@ cask "skerratt-london-piano-vst" do
   homepage "https://plugins4free.com/plugin/2295"
   depends_on :macos
   artifact "Skerratt London Piano.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Skerratt London Piano.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Skerratt London Piano.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Skerratt London Piano.vst"]
+  end
 end
