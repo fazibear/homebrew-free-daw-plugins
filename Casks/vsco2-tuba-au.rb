@@ -7,4 +7,8 @@ cask "vsco2-tuba-au" do
   homepage "https://plugins4free.com/plugin/2558"
   depends_on :macos
   artifact "VSCO2 Tuba.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Tuba.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Tuba.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/VSCO2 Tuba.component"]
+  end
 end
