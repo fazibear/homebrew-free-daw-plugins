@@ -242,11 +242,11 @@ def regeneration_worktree(ref):
             run("git", "worktree", "remove", "--force", worktree)
 
 
-def changed_casks_for_pr(base_sha):
+def changed_casks_for_pr(base_sha, head_ref="HEAD"):
     """Select all surviving casks changed by the PR, independent of its branch name."""
     changed = run(
         "git", "diff", "--diff-filter=AMR", "--name-only", "-z",
-        f"{base_sha}...HEAD", "--", "Casks/*.rb", capture=True,
+        f"{base_sha}...{head_ref}", "--", "Casks/*.rb", capture=True,
     ).stdout.split("\0")
     return sorted({
         Path(name) for name in changed
@@ -425,9 +425,15 @@ def validate_action():
         run("gh", "pr", "checkout", number, "--repo", repo)
         refs = gh_json("pr", "view", number, "--repo", repo, "--json", "baseRefOid,headRefOid", token=token)
         base_sha, head_sha = refs["baseRefOid"], refs["headRefOid"]
-        changed = run("git", "diff", "--diff-filter=AM", "--name-only", base_sha, head_sha, "--", "Casks/*.rb", capture=True).stdout.splitlines()
+        run("git", "fetch", "origin", base_sha)
+        checked_out_sha = run("git", "rev-parse", "HEAD", capture=True).stdout.strip()
+        if checked_out_sha != head_sha:
+            raise RuntimeError("PR head changed during checkout; rerun validation for the latest commit")
+        changed = changed_casks_for_pr(base_sha, head_sha)
         if not changed:
             raise RuntimeError("No added or modified Casks/*.rb files found in the PR")
+        print(f"Validating {len(changed)} cask(s) changed by PR #{number}: "
+              + ", ".join(path.stem for path in changed), flush=True)
         for filename in changed:
             path = Path(filename)
             if not path.is_file():
