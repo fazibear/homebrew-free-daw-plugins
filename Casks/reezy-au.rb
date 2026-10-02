@@ -7,4 +7,8 @@ cask "reezy-au" do
   homepage "https://plugins4free.com/plugin/3239"
   depends_on :macos
   artifact "Reezy Official (Mac)/Reezy.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Reezy.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Reezy.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Reezy.component"]
+  end
 end
