@@ -7,4 +7,8 @@ cask "iowa-alto-sax-au" do
   homepage "https://plugins4free.com/plugin/2513"
   depends_on :macos
   artifact "Iowa Alto Sax.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Iowa Alto Sax.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Iowa Alto Sax.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Iowa Alto Sax.component"]
+  end
 end
