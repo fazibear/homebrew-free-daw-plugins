@@ -7,4 +7,8 @@ cask "k3-v-extended-au" do
   homepage "https://plugins4free.com/plugin/2928"
   depends_on :macos
   artifact "K3-V (Mac AU)/K3-V.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/K3-V.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/K3-V.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/K3-V.component"]
+  end
 end
