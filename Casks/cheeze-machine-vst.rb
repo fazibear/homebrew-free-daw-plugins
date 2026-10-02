@@ -9,4 +9,9 @@ cask "cheeze-machine-vst" do
   container type: :dmg
   artifact "VST/CheezeMachine.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/CheezeMachine.vst"
   artifact "VST/CheezeMachineMetal.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/CheezeMachineMetal.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/CheezeMachine.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/CheezeMachine.vst"]
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/CheezeMachineMetal.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/CheezeMachineMetal.vst"]
+  end
 end
