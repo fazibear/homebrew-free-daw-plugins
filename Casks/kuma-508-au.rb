@@ -7,4 +7,8 @@ cask "kuma-508-au" do
   homepage "https://plugins4free.com/plugin/3328"
   depends_on :macos
   artifact "Mac OSX/Kuma 508/Kuma 508.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Kuma 508.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Kuma 508.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Kuma 508.component"]
+  end
 end
