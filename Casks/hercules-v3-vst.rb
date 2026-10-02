@@ -6,5 +6,9 @@ cask "hercules-v3-vst" do
   desc "Hercules V2 is a Supersaw synthesizer ."
   homepage "https://plugins4free.com/plugin/3456"
   depends_on :macos
-  artifact "Hercules-V3_(MacOS).zip.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Hercules-V3_(MacOS).zip.vst"
+  artifact "Hercules V3 (MacOS) experimental/Hercules V3.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/Hercules V3.component"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/Components/Hercules V3.component"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/Components/Hercules V3.component"]
+  end
 end
