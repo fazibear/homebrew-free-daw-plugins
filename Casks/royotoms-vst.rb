@@ -6,8 +6,9 @@ cask "royotoms-vst" do
   desc "Royotoms is a sampled rototoms set."
   homepage "https://plugins4free.com/plugin/2391"
   depends_on :macos
+  artifact "Royotoms.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Royotoms.vst"
+
   postflight_steps do
-    mkdir_p "{{user}}/Library/Audio/Plug-Ins/VST"
-    copy "Royotoms.vst", "{{user}}/Library/Audio/Plug-Ins/VST/Royotoms.vst", recursive: true
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Royotoms.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Royotoms.vst"]
   end
 end
