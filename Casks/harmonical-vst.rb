@@ -7,4 +7,8 @@ cask "harmonical-vst" do
   homepage "https://plugins4free.com/plugin/1649"
   depends_on :macos
   artifact "Harmonical.vst", target: "#{Dir.home}/Library/Audio/Plug-Ins/VST/Harmonical.vst"
+
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-rd", "com.apple.quarantine", "#{Dir.home}/Library/Audio/Plug-Ins/VST/Harmonical.vst"], writable_paths: ["#{Dir.home}/Library/Audio/Plug-Ins/VST/Harmonical.vst"]
+  end
 end
