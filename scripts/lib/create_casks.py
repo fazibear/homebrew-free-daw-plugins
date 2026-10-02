@@ -205,13 +205,13 @@ def render(candidate):
         archive = candidate.get("archive_members")
         if archive is None and "archive_members" not in candidate:
             archive = archive_members(candidate)
-        if not archive and filename.lower().endswith(".dmg"):
-            archive = (filename, [], ".", None)
         if not archive:
             return None, None
         unsigned_bundles = archive.get("unsigned_bundles", []) if isinstance(archive, dict) else []
         if isinstance(archive, tuple):
             bundle, _, _, _ = archive
+            if not bundle.lower().endswith(tuple(PLUGIN_DIRS) + (".app", ".pkg")):
+                return None, None
             bundles = [] if bundle.lower().endswith((".app", ".pkg")) else [bundle]
             apps = [bundle] if bundle.lower().endswith(".app") else []
             packages = [bundle] if bundle.lower().endswith(".pkg") else []
@@ -220,6 +220,9 @@ def render(candidate):
             apps = archive.get("apps", [])
             packages = archive.get("packages", [])
             bundle = bundles[0] if bundles else (apps[0] if apps else (packages[0] if packages else ""))
+        if not bundle:
+            print(f"Cask generator: no installable artifact found in {filename}", file=sys.stderr)
+            return None, None
         if bundle.lower().endswith(".pkg"):
             install = f'  pkg "{bundle}"'
         elif bundle.lower().endswith(".app") and not bundles and not packages:
@@ -227,10 +230,6 @@ def render(candidate):
         else:
             if candidate.get("source") == "plugins4free" and candidate.get("format") in {"AU", "VST"}:
                 name = f"{slug(display)}-{candidate['format'].lower()}"
-            if not bundles:
-                extension = candidate.get("format", "VST3")
-                suffix = {"AU": ".component", "VST": ".vst", "AAX": ".aaxplugin"}.get(extension, f".{extension.lower()}")
-                bundles = [f"{filename}{suffix}"]
             artifacts = []
             for plugin_bundle in bundles:
                 plugin_extension = Path(plugin_bundle).suffix.lower()
