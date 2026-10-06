@@ -1,7 +1,7 @@
 cask "fire" do
-  version "1.5.0"
-  sha256 "e4c63f6954ad89a4137d50de71dd9dd00486ad8afeca2f0ebaeb3b7c837e24b3"
-  url "https://github.com/jerryuhoo/Fire/releases/download/v1.5.0/Fire-1.5.0-macOS.zip"
+  version "2.0.0"
+  sha256 "f00e4ed4e25fed1954b591bb3c18fb6326cd68a4eb72495ad20d222e9fe78d39"
+  url "https://github.com/jerryuhoo/Fire/releases/download/v2.0.0/Fire-2.0.0-macOS.zip"
   name "Fire"
   desc "Multi-band distortion plugin by Jerry Uhoo"
   homepage "https://jerryuhoo.github.io/Fire/"
