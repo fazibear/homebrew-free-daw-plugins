@@ -1,7 +1,7 @@
 cask "nseqarpkeys" do
-  version "1.5.0"
-  sha256 "63a3a23417414b1b699eb35379b5d11b88f88e7e49c81f6f815bc0f00737675f"
-  url "https://github.com/ncg777/NSeqArpKeys/releases/download/v1.5.0/NSeqArpKeys-1.5.0-macos-universal.zip"
+  version "1.5.1"
+  sha256 "b16059a570693aa5e08ba55b7ad23088dacc7422e40229072604287ac958f487"
+  url "https://github.com/ncg777/NSeqArpKeys/releases/download/v1.5.1/NSeqArpKeys-1.5.1-macos-universal.zip"
   name "NSeqArpKeys"
   desc "Free audio plugin"
   homepage "https://github.com/ncg777/NSeqArpKeys"
