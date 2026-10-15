@@ -1,10 +1,10 @@
 cask "brack" do
-  version "1.2.0"
-  sha256 "308f147fe059c3125bb61420faedcea6c86d8a2512f1f139b2c2565602e6bef2"
-  url "https://github.com/hsshss/brack/releases/download/v1.2.0/brack-1.2.0-osx-universal.zip"
+  version "2.0.0"
+  sha256 "a05e1e3bb763e618d41ae7b3d50357e39b3fb1cb2ec83fb158a727524a7754bd"
+  url "https://github.com/hsshss/brack/releases/download/v2.0.0/brack-2.0.0-osx-universal.zip"
   name "brack"
   desc "Free audio plugin"
   homepage "https://github.com/hsshss/brack"
   depends_on :macos
-  app "brack-1.2.0-osx-universal/Brack.app"
+  app "brack-2.0.0-osx-universal/Brack.app"
 end
