@@ -1,7 +1,7 @@
 cask "sonora" do
-  version "0.1.4"
-  sha256 "761f69d5bde74fce63caaabb8fffc361fc4e03c3b4cba341ab5bfaeaa623ffbd"
-  url "https://github.com/lordillusions/sonora/releases/download/v0.1.4/Sonora-macOS.dmg"
+  version "0.1.5"
+  sha256 "53931097e4d7d27aa67fb234bca1dee85ad8642aa73ea0c0e7ac3cb9f1df2550"
+  url "https://github.com/lordillusions/sonora/releases/download/v0.1.5/Sonora-macOS.dmg"
   name "sonora"
   desc "Free audio plugin"
   homepage "https://github.com/lordillusions/sonora"
