@@ -1,10 +1,11 @@
 cask "jenitor" do
   version "0.6.2"
-  sha256 "01dd2a7d3320bca25a0bd771c83c00a18a086188c273c6bd17edd47590875eb0"
-  url "https://github.com/helysx99/Jenitor/releases/download/v0.6.2/JENITOR-0.6.2-unsigned.pkg"
+  sha256 "79242ba9dbbc0ba9f137cbadc8a6d30279e144d83c93c47ef1647c356d2d7317"
+  url "https://github.com/helysx99/Jenitor/releases/download/v0.6.2/JENITOR-macos-AU.zip"
   name "Jenitor"
   desc "Free audio plugin"
   homepage "https://github.com/helysx99/Jenitor"
   depends_on :macos
-  pkg "JENITOR-0.6.2-unsigned.pkg"
+  artifact "JENITOR MFX.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/JENITOR MFX.component"
+  artifact "JENITOR.component", target: "#{Dir.home}/Library/Audio/Plug-Ins/Components/JENITOR.component"
 end
