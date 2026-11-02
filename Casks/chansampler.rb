@@ -1,10 +1,10 @@
 cask "chansampler" do
-  version "1.4.2"
-  sha256 "51c0a568d9b99ae85af2e60da61e29bfb3617bf849e4f76177362a1f0562de5a"
-  url "https://github.com/MaymiPR/Chan-Sampler/releases/download/v1.4.2/ChanSampler-1.4.2-macOS.pkg"
+  version "1.6.0"
+  sha256 "7eaaa100471c63f1af4e5936e0b840fab229bfe2f59c113d47e70e23e113962e"
+  url "https://github.com/MaymiPR/Chan-Sampler/releases/download/v1.6.0/ChanSampler-1.6.0-macOS.pkg"
   name "ChanSampler"
   desc "Free audio plugin"
   homepage "https://github.com/MaymiPR/ChanSampler"
   depends_on :macos
-  pkg "ChanSampler-1.4.2-macOS.pkg"
+  pkg "ChanSampler-1.6.0-macOS.pkg"
 end
