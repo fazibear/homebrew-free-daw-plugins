@@ -1,7 +1,7 @@
 cask "plectrify" do
-  version "0.1.5"
-  sha256 "8e2dcb4cf5a63d9ea086c50a545d5bdf360bba3485f61ed64d2c9215778e259e"
-  url "https://github.com/patrickiel/plectrify/releases/download/v0.1.5/Plectrify-macos-arm64.pkg"
+  version "0.1.6"
+  sha256 "a074f72532d505d203f7d7606c49fe3fe38fc9de3f8fed8ab9cf12a72a52873e"
+  url "https://github.com/patrickiel/plectrify/releases/download/v0.1.6/Plectrify-macos-arm64.pkg"
   name "plectrify"
   desc "Free audio plugin"
   homepage "https://github.com/patrickiel/plectrify"
