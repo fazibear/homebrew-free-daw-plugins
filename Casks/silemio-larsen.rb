@@ -1,7 +1,7 @@
 cask "silemio-larsen" do
-  version "2027.7"
-  sha256 "8f616f114a199cf4631d25fa5750352dfe94b5e12ae139321951cbf2a8f37cb7"
-  url "https://github.com/Mamat79/SiLeMIO-Larsen/releases/download/v2027.7/SiLeMIO-Larsen-2027.7-Mac.dmg"
+  version "2027.8"
+  sha256 "73df0a637719607bb1d6eb67c1fe4b3bd9f2e1e2ffc8f7e6128f96b673b3212b"
+  url "https://github.com/Mamat79/SiLeMIO-Larsen/releases/download/v2027.8/SiLeMIO-Larsen-2027.8-Mac.dmg"
   name "SiLeMIO-Larsen"
   desc "Free audio plugin"
   homepage "https://github.com/Mamat79/SiLeMIO-Larsen"
