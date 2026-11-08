@@ -1,7 +1,7 @@
 cask "abyzor-genesis" do
-  version "2.3.0"
-  sha256 "b4e6a3d163081a148a919be2609b075a36ed567be9552032873b265c0a297791"
-  url "https://github.com/abyzor/abyzor-genesis/releases/download/v2.3.0/ABYZOR_Genesis_v2.3.0_macOS.zip"
+  version "2.3.1"
+  sha256 "f73ef1283c583435166b85a5b36825daa4da25b8a914d45f9fed73865a8c8fb7"
+  url "https://github.com/abyzor/abyzor-genesis/releases/download/v2.3.1/ABYZOR_Genesis_v2.3.1_macOS.zip"
   name "ABYZOR Genesis"
   desc "MIDI generator plugin"
   homepage "https://abyzor.space/products/genesis/"
