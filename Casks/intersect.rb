@@ -1,7 +1,7 @@
 cask "intersect" do
-  version "0.18.2"
-  sha256 "f903e906702f07abab240edce8a3c2e3503f81d1d07bc76b7b4f4a20d0e7f343"
-  url "https://github.com/tucktuckg00se/INTERSECT/releases/download/v0.18.2/INTERSECT-v0.18.2-macOS-arm64.zip"
+  version "0.19.0"
+  sha256 "7a8c3901d5ca4a6529be665c007137502288aee58b26d374f0113473ae7260d2"
+  url "https://github.com/tucktuckg00se/INTERSECT/releases/download/v0.19.0/INTERSECT-v0.19.0-macOS-arm64.zip"
   name "INTERSECT"
   desc "Free audio plugin"
   homepage "https://github.com/tucktuckg00se/INTERSECT"
