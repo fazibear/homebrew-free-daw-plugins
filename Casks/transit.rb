@@ -1,7 +1,7 @@
 cask "transit" do
-  version "0.7.2"
-  sha256 "b62813de8498033c738b8dd4b32442d088abbd24c6b550358b30e2f9497f3985"
-  url "https://github.com/transit-audio/transit/releases/download/v0.7.2/transit-v0.7.2-macos-arm64.dmg"
+  version "0.7.3"
+  sha256 "5e657e58808bfb214460d66e054977e069c16a4db1e86961b2a16f6a886b5ce7"
+  url "https://github.com/transit-audio/transit/releases/download/v0.7.3/transit-v0.7.3-macos-arm64.dmg"
   name "transit"
   desc "Free audio plugin"
   homepage "https://github.com/transit-audio/transit"
