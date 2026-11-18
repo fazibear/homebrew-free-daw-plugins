@@ -1,10 +1,10 @@
 cask "dussek" do
-  version "0.4.0"
-  sha256 "a0c02e7e0d7a6f5e2c541a1b3cee1f06bcaea708fb88a251e169e7070763749a"
-  url "https://github.com/ccoors/dussek/releases/download/v0.4.0/dussek-0.4.0-macos.pkg"
+  version "0.4.1"
+  sha256 "96e0c2c55168c4d67482b7d0b094f2ef10b06e56977e33abbbf2895349540a10"
+  url "https://github.com/ccoors/dussek/releases/download/v0.4.1/dussek-0.4.1-macos.pkg"
   name "dussek"
   desc "Free audio plugin"
   homepage "https://github.com/ccoors/dussek"
   depends_on :macos
-  pkg "dussek-0.4.0-macos.pkg"
+  pkg "dussek-0.4.1-macos.pkg"
 end
