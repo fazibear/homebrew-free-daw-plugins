@@ -1,10 +1,10 @@
 cask "pianotolife" do
-  version "11.3.0-PianoToLife"
-  sha256 "11527e244517cacf0f899d24e7428c2070e1d3db901b3c07dae9680aefc6e63c"
-  url "https://github.com/owfrappier/PianoToLife/releases/download/v11.3.0-PianoToLife/PianoToLife-11.3.0-macOS-AppleSilicon.pkg"
+  version "11.3.3-PianoToLife"
+  sha256 "0b32bf79dc6f566d3f1a00e303555dd714ee8ae6cb1b3dd5b26652ae29e8f8c7"
+  url "https://github.com/owfrappier/PianoToLife/releases/download/v11.3.3-PianoToLife/PianoToLife-11.3.3-macOS-AppleSilicon.pkg"
   name "PianoToLife"
   desc "Free audio plugin"
   homepage "https://github.com/owfrappier/PianoToLife"
   depends_on :macos
-  pkg "PianoToLife-11.3.0-macOS-AppleSilicon.pkg"
+  pkg "PianoToLife-11.3.3-macOS-AppleSilicon.pkg"
 end
