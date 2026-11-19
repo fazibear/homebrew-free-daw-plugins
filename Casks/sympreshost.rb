@@ -1,10 +1,10 @@
 cask "sympreshost" do
-  version "11.3.1-PianoToLife"
-  sha256 "09f6c285191abcf66b51dd12c52ad94bc9dbeb88875656157fa87201e61965cf"
-  url "https://github.com/owfrappier/PianoToLife/releases/download/v11.3.1-PianoToLife/PianoToLife-11.3.1-macOS-AppleSilicon.pkg"
+  version "11.3.3-PianoToLife"
+  sha256 "0b32bf79dc6f566d3f1a00e303555dd714ee8ae6cb1b3dd5b26652ae29e8f8c7"
+  url "https://github.com/owfrappier/PianoToLife/releases/download/v11.3.3-PianoToLife/PianoToLife-11.3.3-macOS-AppleSilicon.pkg"
   name "SympResHost"
   desc "Free audio plugin"
   homepage "https://github.com/owfrappier/SympResHost"
   depends_on :macos
-  pkg "PianoToLife-11.3.1-macOS-AppleSilicon.pkg"
+  pkg "PianoToLife-11.3.3-macOS-AppleSilicon.pkg"
 end
