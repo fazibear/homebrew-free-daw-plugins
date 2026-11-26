@@ -1,7 +1,7 @@
 cask "ludensscope" do
-  version "1.0.11"
-  sha256 "f1643f6ce2ae7399dc2eb2d9f8f93878c66885d9fbf205c80a3a242dce10733a"
-  url "https://github.com/ltillegal/ludensscope/releases/download/v1.0.11/LudensScope-macos.pkg"
+  version "1.1.0"
+  sha256 "a69679dc5cb1f7e5bb9c8a73441d12599b4e434a8deea2ddc39f68fcecd4f24a"
+  url "https://github.com/ltillegal/ludensscope/releases/download/v1.1.0/LudensScope-macos.pkg"
   name "ludensscope"
   desc "Free audio plugin"
   homepage "https://github.com/ltillegal/ludensscope"
